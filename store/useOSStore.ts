@@ -1,11 +1,18 @@
 import { create } from 'zustand';
 
+export interface Customer {
+  id: string;
+  name: string;
+  lifetimeValue: number;
+  status: 'Active' | 'Churned' | 'Lead';
+}
+
 export interface Product {
   id: string;
   sku: string;
   name: string;
   stockLevel: number;
-  cogs: number; // Cost of goods sold
+  cogs: number;
 }
 
 export interface Transaction {
@@ -17,8 +24,8 @@ export interface Transaction {
 
 export interface Deal {
   id: string;
-  customer: string;
-  productId: string; // V1.1 Inventory Connection
+  customerId: string; // V1.2 Relational Connection
+  productId: string; 
   value: number;
   stage: 'Lead' | 'Negotiation' | 'Closed';
 }
@@ -32,6 +39,7 @@ export interface Activity {
 
 interface OSState {
   cashflow: number;
+  customers: Customer[];
   products: Product[];
   transactions: Transaction[];
   deals: Deal[];
@@ -45,6 +53,13 @@ interface OSState {
 export const useOSStore = create<OSState>((set) => ({
   cashflow: 124500.00,
   
+  customers: [
+    { id: 'c1', name: 'Amazon Web Services', lifetimeValue: 450000, status: 'Active' },
+    { id: 'c2', name: 'Global Tech', lifetimeValue: 12500, status: 'Active' },
+    { id: 'c3', name: 'Daily Planet', lifetimeValue: 0, status: 'Lead' },
+    { id: 'c4', name: 'Acme Corp', lifetimeValue: 5000, status: 'Active' },
+  ],
+
   products: [
     { id: 'p1', sku: 'AWS-EC2-YZ', name: 'Enterprise Server Node', stockLevel: 15, cogs: 800 },
     { id: 'p2', sku: 'SAAS-LIC-1Y', name: 'Annual Software License', stockLevel: 999, cogs: 0 },
@@ -57,10 +72,10 @@ export const useOSStore = create<OSState>((set) => ({
   ],
   
   deals: [
-    { id: 'd1', customer: 'Amazon Web Services', productId: 'p1', value: 85000, stage: 'Negotiation' },
-    { id: 'd2', customer: 'Global Tech', productId: 'p3', value: 12000, stage: 'Lead' },
-    { id: 'd3', customer: 'Daily Planet', productId: 'p2', value: 4500, stage: 'Lead' },
-    { id: 'd4', customer: 'Acme Corp', productId: 'p2', value: 5000, stage: 'Closed' },
+    { id: 'd1', customerId: 'c1', productId: 'p1', value: 85000, stage: 'Negotiation' },
+    { id: 'd2', customerId: 'c2', productId: 'p3', value: 12000, stage: 'Lead' },
+    { id: 'd3', customerId: 'c3', productId: 'p2', value: 4500, stage: 'Lead' },
+    { id: 'd4', customerId: 'c4', productId: 'p2', value: 5000, stage: 'Closed' },
   ],
   
   activityFeed: [
@@ -83,9 +98,12 @@ export const useOSStore = create<OSState>((set) => ({
     if (deal.stage === newStage) return state;
     deal.stage = newStage;
 
+    const customer = state.customers.find(c => c.id === deal.customerId);
+    const customerName = customer ? customer.name : 'Unknown Client';
+
     const newActivity: Activity = {
       id: Date.now().toString(),
-      title: `Deal with ${deal.customer} moved to ${newStage}`,
+      title: `Deal with ${customerName} moved to ${newStage}`,
       type: newStage === 'Closed' ? 'positive' : 'neutral',
       amount: newStage === 'Closed' ? deal.value : undefined,
     };
@@ -93,18 +111,19 @@ export const useOSStore = create<OSState>((set) => ({
     let newCashflow = state.cashflow;
     const newTransactions = [...state.transactions];
     const newProducts = [...state.products];
+    const newCustomers = [...state.customers];
     let inventoryActivity: Activity | null = null;
 
     if (newStage === 'Closed') {
       newCashflow += deal.value;
       newTransactions.unshift({
         id: `tx-${Date.now()}`,
-        name: `Deal Closed: ${deal.customer}`,
+        name: `Deal Closed: ${customerName}`,
         date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         amount: deal.value,
       });
 
-      // V1.1: Automated Inventory Decrement Logic
+      // V1.1: Automated Inventory Decrement
       const productIndex = newProducts.findIndex(p => p.id === deal.productId);
       if (productIndex !== -1) {
         newProducts[productIndex] = {
@@ -112,12 +131,21 @@ export const useOSStore = create<OSState>((set) => ({
           stockLevel: newProducts[productIndex].stockLevel - 1
         };
         
-        // Push systemic entropy notification
         inventoryActivity = {
            id: Date.now().toString() + '-inv',
            title: `Stock Depleted: ${newProducts[productIndex].sku} (-1 Unit)`,
            type: 'neutral'
         };
+      }
+
+      // V1.2: Relational LTV Increment
+      const customerIndex = newCustomers.findIndex(c => c.id === deal.customerId);
+      if (customerIndex !== -1) {
+         newCustomers[customerIndex] = {
+            ...newCustomers[customerIndex],
+            lifetimeValue: newCustomers[customerIndex].lifetimeValue + deal.value,
+            status: 'Active'
+         };
       }
     }
 
@@ -130,7 +158,8 @@ export const useOSStore = create<OSState>((set) => ({
       activityFeed: nextActivityFeed,
       cashflow: newCashflow,
       transactions: newTransactions,
-      products: newProducts, // Persist depleted inventory
+      products: newProducts,
+      customers: newCustomers, // V1.2 persistence
     };
   })
 }));

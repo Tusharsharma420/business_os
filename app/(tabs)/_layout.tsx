@@ -29,6 +29,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="customers"
+        options={{
+          title: 'CRM',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.2.fill" color={color} />, // Fallback icon
+        }}
+      />
+      <Tabs.Screen
         name="ledger"
         options={{
           title: 'Ledger',

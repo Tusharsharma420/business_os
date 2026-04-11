@@ -8,6 +8,7 @@ const STAGES = ['Lead', 'Negotiation', 'Closed'];
 export default function SalesScreen() {
   const theme = Colors.light;
   const deals = useOSStore(state => state.deals);
+  const customers = useOSStore(state => state.customers);
   const updateDealStage = useOSStore(state => state.updateDealStage);
 
   const advanceDeal = (id: string, currentStage: string) => {
@@ -30,17 +31,20 @@ export default function SalesScreen() {
                   {stage} <Text style={styles.count}>({stageDeals.length})</Text>
                 </Text>
                 
-                {stageDeals.map(deal => (
-                  <TouchableOpacity 
-                    key={deal.id} 
-                    style={[styles.card, { backgroundColor: theme.surface }]}
-                    onPress={() => advanceDeal(deal.id, deal.stage)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={[styles.cardCustomer, { color: theme.textHigh }]}>{deal.customer}</Text>
-                    <Text style={[styles.cardValue, { color: theme.primary }]}>${deal.value.toLocaleString()}</Text>
-                  </TouchableOpacity>
-                ))}
+                {stageDeals.map(deal => {
+                  const customer = customers.find(c => c.id === deal.customerId);
+                  return (
+                    <TouchableOpacity 
+                      key={deal.id} 
+                      style={[styles.card, { backgroundColor: theme.surface }]}
+                      onPress={() => advanceDeal(deal.id, deal.stage)}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={[styles.cardCustomer, { color: theme.textHigh }]}>{customer ? customer.name : 'Unknown Client'}</Text>
+                      <Text style={[styles.cardValue, { color: theme.primary }]}>${deal.value.toLocaleString()}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             );
           })}
