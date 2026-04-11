@@ -1,17 +1,19 @@
 import React from 'react';
-import { StyleSheet, View, Text, ScrollView, SafeAreaView } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, SafeAreaView, TouchableOpacity } from 'react-native';
 import { Colors, Spacing } from '@/constants/DesignSystem';
+import { useOSStore } from '@/store/useOSStore';
 
 const STAGES = ['Lead', 'Negotiation', 'Closed'];
-const MOCK_DEALS = [
-  { id: '1', customer: 'Acme Corp', value: 5000, stage: 'Closed' },
-  { id: '2', customer: 'Global Tech', value: 12000, stage: 'Negotiation' },
-  { id: '3', customer: 'Stark Ind.', value: 450, stage: 'Lead' },
-  { id: '4', customer: 'Wayne Ent.', value: 8900, stage: 'Negotiation' },
-];
 
 export default function SalesScreen() {
   const theme = Colors.light;
+  const deals = useOSStore(state => state.deals);
+  const updateDealStage = useOSStore(state => state.updateDealStage);
+
+  const advanceDeal = (id: string, currentStage: string) => {
+    if (currentStage === 'Lead') updateDealStage(id, 'Negotiation');
+    else if (currentStage === 'Negotiation') updateDealStage(id, 'Closed');
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
@@ -20,7 +22,7 @@ export default function SalesScreen() {
         
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.kanbanContainer}>
           {STAGES.map(stage => {
-            const stageDeals = MOCK_DEALS.filter(d => d.stage === stage);
+            const stageDeals = deals.filter(d => d.stage === stage);
             
             return (
               <View key={stage} style={styles.column}>
@@ -29,10 +31,15 @@ export default function SalesScreen() {
                 </Text>
                 
                 {stageDeals.map(deal => (
-                  <View key={deal.id} style={[styles.card, { backgroundColor: theme.surface }]}>
+                  <TouchableOpacity 
+                    key={deal.id} 
+                    style={[styles.card, { backgroundColor: theme.surface }]}
+                    onPress={() => advanceDeal(deal.id, deal.stage)}
+                    activeOpacity={0.8}
+                  >
                     <Text style={[styles.cardCustomer, { color: theme.textHigh }]}>{deal.customer}</Text>
                     <Text style={[styles.cardValue, { color: theme.primary }]}>${deal.value.toLocaleString()}</Text>
-                  </View>
+                  </TouchableOpacity>
                 ))}
               </View>
             );

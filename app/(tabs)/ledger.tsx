@@ -1,16 +1,11 @@
 import React from 'react';
 import { StyleSheet, View, Text, FlatList, SafeAreaView } from 'react-native';
 import { Colors, Spacing } from '@/constants/DesignSystem';
-
-const MOCK_LEDGER = [
-  { id: '1', name: 'Software Licenses', date: 'Oct 24', amount: -240.00 },
-  { id: '2', name: 'Invoice #004 (Acme Corp)', date: 'Oct 23', amount: 5000.00 },
-  { id: '3', name: 'Office Supplies', date: 'Oct 22', amount: -150.00 },
-  { id: '4', name: 'Invoice #003 (Stark Ind.)', date: 'Oct 20', amount: 12500.00 },
-];
+import { useOSStore } from '@/store/useOSStore';
 
 export default function LedgerScreen() {
   const theme = Colors.light;
+  const transactions = useOSStore(state => state.transactions);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
@@ -18,7 +13,7 @@ export default function LedgerScreen() {
         <Text style={[styles.headerTitle, { color: theme.textHigh }]}>Ledger</Text>
         
         <FlatList
-          data={MOCK_LEDGER}
+          data={transactions}
           keyExtractor={item => item.id}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
@@ -31,7 +26,7 @@ export default function LedgerScreen() {
                 styles.amount,
                 { color: item.amount > 0 ? theme.positive : theme.textHigh }
               ]}>
-                {item.amount > 0 ? '+' : ''}${Math.abs(item.amount).toFixed(2)}
+                {item.amount > 0 ? '+' : ''}${Math.abs(item.amount).toLocaleString('en-US', {minimumFractionDigits: 2})}
               </Text>
             </View>
           )}

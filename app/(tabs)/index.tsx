@@ -1,40 +1,39 @@
 import React from 'react';
 import { StyleSheet, View, Text, FlatList, SafeAreaView } from 'react-native';
 import { Colors, Spacing } from '@/constants/DesignSystem';
-
-const MOCK_ACTIVITY = [
-  { id: '1', title: 'Deal Closed', amount: 5000, type: 'positive' },
-  { id: '2', title: 'Inventory Low: AWS Servers', type: 'neutral' },
-  { id: '3', title: 'Payroll Processed', amount: -12500, type: 'negative' },
-];
+import { useOSStore } from '@/store/useOSStore';
 
 export default function DashboardScreen() {
   const theme = Colors.light;
+  const cashflow = useOSStore(state => state.cashflow);
+  const activityFeed = useOSStore(state => state.activityFeed);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
       <View style={styles.container}>
         <View style={styles.header}>
           <Text style={[styles.label, { color: theme.textLow }]}>Total Cashflow</Text>
-          <Text style={[styles.largeValue, { color: theme.textHigh }]}>$124,500.00</Text>
-          
+          <Text style={[styles.largeValue, { color: theme.textHigh }]}>
+            ${cashflow.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </Text>
           <View style={[styles.sparkline, { backgroundColor: theme.primary }]} />
         </View>
 
         <View style={styles.activitySection}>
           <Text style={[styles.sectionTitle, { color: theme.textHigh }]}>Activity Feed</Text>
           <FlatList
-            data={MOCK_ACTIVITY}
+            data={activityFeed}
             keyExtractor={item => item.id}
+            showsVerticalScrollIndicator={false}
             renderItem={({ item }) => (
               <View style={styles.activityRow}>
                 <Text style={[styles.activityTitle, { color: theme.textHigh }]}>{item.title}</Text>
-                {item.amount && (
+                {item.amount !== undefined && (
                   <Text style={[
                     styles.activityAmount, 
-                    { color: item.type === 'positive' ? theme.positive : theme.textHigh }
+                    { color: item.type === 'positive' ? theme.positive : theme.negative }
                   ]}>
-                    {item.amount > 0 ? '+' : ''}{item.amount}
+                    {item.amount > 0 ? '+' : ''}${Math.abs(item.amount).toLocaleString()}
                   </Text>
                 )}
               </View>
