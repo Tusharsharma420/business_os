@@ -1,17 +1,17 @@
-import React from 'react';
-import { View, Text, TextInput, StyleSheet, TextInputProps } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TextInputProps, ViewStyle } from 'react-native';
 import { Colors, Spacing } from '@/constants/DesignSystem';
 
 interface FormInputProps extends TextInputProps {
-  label: string;
+  label?: string;
+  containerStyle?: ViewStyle;
 }
 
-export function FormInput({ label, ...props }: FormInputProps) {
+export function FormInput({ label, containerStyle, ...props }: FormInputProps) {
   const theme = Colors.light;
 
   return (
-    <View style={styles.group}>
-      <Text style={[styles.label, { color: theme.textLow }]}>{label}</Text>
+    <View style={[styles.group, containerStyle]}>
+      {label && <Text style={[styles.label, { color: theme.textLow }]}>{label}</Text>}
       <TextInput
         style={[styles.input, { color: theme.textHigh, backgroundColor: '#F2F2F7' }]}
         placeholderTextColor={theme.textLow}

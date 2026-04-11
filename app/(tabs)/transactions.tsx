@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet, View, Text, FlatList,
   SafeAreaView, TouchableOpacity, ScrollView, Alert,
@@ -10,7 +10,7 @@ import {
   EXPENSE_CATEGORY_EMOJI,
   type ExpenseCategory,
 } from '@/store/useOSStore';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { BottomSheet } from '@/components/BottomSheet';
 import { FormInput } from '@/components/FormInput';
 import { PrimaryButton } from '@/components/PrimaryButton';
@@ -20,7 +20,8 @@ type TxType = 'Money In' | 'Money Out';
 export default function TransactionsScreen() {
   const theme = Colors.light;
   const router = useRouter();
-  const { transactions, contacts, items, addTransaction, deleteTransaction, identity } = useOSStore();
+  const { contactId, add } = useLocalSearchParams();
+  const { transactions, contacts, items, addTransaction, deleteTransaction, addContact, addItem, identity } = useOSStore();
   const cur = identity.currency;
 
   const [sheetVisible, setSheetVisible] = useState(false);
@@ -31,10 +32,29 @@ export default function TransactionsScreen() {
   const [itemIdx, setItemIdx] = useState(0);
   const [expenseCat, setExpenseCat] = useState<ExpenseCategory>('Other');
 
+  // In-place addition states
+  const [isAddingContact, setIsAddingContact] = useState(false);
+  const [newContactName, setNewContactName] = useState('');
+  const [isAddingItem, setIsAddingItem] = useState(false);
+  const [newItemName, setNewItemName] = useState('');
+
+  // Handle incoming params (e.g. from Contact Detail)
+  useEffect(() => {
+    if (contactId) {
+      const idx = contacts.findIndex(c => c.id === contactId);
+      if (idx !== -1) {
+        setContactIdx(idx);
+        setSheetVisible(true);
+      }
+    } else if (add === 'true') {
+      setSheetVisible(true);
+    }
+  }, [contactId, add, contacts]);
+
   const totalIn = transactions.filter(t => t.type === 'Money In').reduce((s, t) => s + t.amount, 0);
   const totalOut = transactions.filter(t => t.type === 'Money Out').reduce((s, t) => s + t.amount, 0);
 
-  const handleAdd = () => {
+  const handleAddTx = () => {
     const parsed = parseFloat(amount);
     if (!parsed || isNaN(parsed)) return;
     addTransaction({
@@ -48,6 +68,24 @@ export default function TransactionsScreen() {
       expenseCategory: txType === 'Money Out' ? expenseCat : undefined,
     });
     setAmount(''); setNote(''); setSheetVisible(false);
+  };
+
+  const handleQuickAddContact = () => {
+    if (!newContactName.trim()) return;
+    addContact({ name: newContactName.trim(), type: 'Customer' });
+    setNewContactName('');
+    setIsAddingContact(false);
+    // New contact will be last in the list
+    setContactIdx(contacts.length);
+  };
+
+  const handleQuickAddItem = () => {
+    if (!newItemName.trim()) return;
+    addItem({ name: newItemName.trim(), price: 0, category: 'General' });
+    setNewItemName('');
+    setIsAddingItem(false);
+    // New item will be last in the list
+    setItemIdx(items.length);
   };
 
   const handleDelete = (id: string) => {
@@ -148,27 +186,77 @@ export default function TransactionsScreen() {
 
           {/* Contact Picker */}
           <View style={{ paddingHorizontal: Spacing.lg, marginBottom: Spacing.md }}>
-            <Text style={styles.pickerLabel}>Contact</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {contacts.map((c, idx) => (
-                <TouchableOpacity key={c.id} style={[styles.chip, idx === contactIdx && { backgroundColor: theme.primary }]} onPress={() => setContactIdx(idx)}>
-                  <Text style={[styles.chipText, { color: idx === contactIdx ? '#FFF' : theme.textHigh }]}>{c.name}</Text>
+            <View style={styles.pickerHeader}>
+              <Text style={styles.pickerLabel}>Contact</Text>
+              {!isAddingContact && (
+                <TouchableOpacity onPress={() => setIsAddingContact(true)}>
+                  <Text style={[styles.quickAddText, { color: theme.primary }]}>+ New</Text>
                 </TouchableOpacity>
-              ))}
-            </ScrollView>
+              )}
+            </View>
+            
+            {isAddingContact ? (
+              <View style={styles.quickAddRow}>
+                <FormInput 
+                  value={newContactName} 
+                  onChangeText={setNewContactName} 
+                  placeholder="Contact Name" 
+                  containerStyle={{ flex: 1, paddingHorizontal: 0, marginBottom: 0 }}
+                />
+                <TouchableOpacity style={[styles.quickAddBtn, { backgroundColor: theme.primary }]} onPress={handleQuickAddContact}>
+                  <Text style={styles.quickAddBtnText}>Save</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setIsAddingContact(false)}>
+                  <Text style={{ fontSize: 18, color: theme.textLow, marginLeft: 10 }}>✕</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {contacts.map((c, idx) => (
+                  <TouchableOpacity key={c.id} style={[styles.chip, idx === contactIdx && { backgroundColor: theme.primary }]} onPress={() => setContactIdx(idx)}>
+                    <Text style={[styles.chipText, { color: idx === contactIdx ? '#FFF' : theme.textHigh }]}>{c.name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            )}
           </View>
 
           {/* Money In: Item Picker */}
           {txType === 'Money In' && (
             <View style={{ paddingHorizontal: Spacing.lg, marginBottom: Spacing.md }}>
-              <Text style={styles.pickerLabel}>Item</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {items.map((item, idx) => (
-                  <TouchableOpacity key={item.id} style={[styles.chip, idx === itemIdx && { backgroundColor: '#333' }]} onPress={() => setItemIdx(idx)}>
-                    <Text style={[styles.chipText, { color: idx === itemIdx ? '#FFF' : theme.textHigh }]}>{item.name}</Text>
+              <View style={styles.pickerHeader}>
+                <Text style={styles.pickerLabel}>Item</Text>
+                {!isAddingItem && (
+                  <TouchableOpacity onPress={() => setIsAddingItem(true)}>
+                    <Text style={[styles.quickAddText, { color: theme.primary }]}>+ New</Text>
                   </TouchableOpacity>
-                ))}
-              </ScrollView>
+                )}
+              </View>
+
+              {isAddingItem ? (
+                <View style={styles.quickAddRow}>
+                  <FormInput 
+                    value={newItemName} 
+                    onChangeText={setNewItemName} 
+                    placeholder="Item Name" 
+                    containerStyle={{ flex: 1, paddingHorizontal: 0, marginBottom: 0 }}
+                  />
+                  <TouchableOpacity style={[styles.quickAddBtn, { backgroundColor: '#333' }]} onPress={handleQuickAddItem}>
+                    <Text style={styles.quickAddBtnText}>Save</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => setIsAddingItem(false)}>
+                    <Text style={{ fontSize: 18, color: theme.textLow, marginLeft: 10 }}>✕</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {items.map((item, idx) => (
+                    <TouchableOpacity key={item.id} style={[styles.chip, idx === itemIdx && { backgroundColor: '#333' }]} onPress={() => setItemIdx(idx)}>
+                      <Text style={[styles.chipText, { color: idx === itemIdx ? '#FFF' : theme.textHigh }]}>{item.name}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              )}
             </View>
           )}
 
@@ -193,7 +281,7 @@ export default function TransactionsScreen() {
 
           <PrimaryButton
             label={`Record ${txType}`}
-            onPress={handleAdd}
+            onPress={handleAddTx}
             color={txType === 'Money In' ? theme.positive : theme.negative}
           />
         </ScrollView>
@@ -229,4 +317,9 @@ const styles = StyleSheet.create({
   catBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, backgroundColor: '#F2F2F7' },
   catEmoji: { fontSize: 14 },
   catText: { fontSize: 13, fontWeight: '600' },
+  pickerHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.sm },
+  quickAddText: { fontSize: 12, fontWeight: '700' },
+  quickAddRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  quickAddBtn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
+  quickAddBtnText: { color: '#FFF', fontSize: 12, fontWeight: '700' },
 });

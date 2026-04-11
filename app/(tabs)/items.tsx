@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { Colors, Spacing } from '@/constants/DesignSystem';
 import { useOSStore } from '@/store/useOSStore';
+import { useRouter } from 'expo-router';
 import { BottomSheet } from '@/components/BottomSheet';
 import { FormInput } from '@/components/FormInput';
 import { PrimaryButton } from '@/components/PrimaryButton';
@@ -16,6 +17,7 @@ const catEmoji: Record<string, string> = {
 
 export default function ItemsScreen() {
   const theme = Colors.light;
+  const router = useRouter();
   const { items, addItem, deleteItem, identity } = useOSStore();
   const cur = identity.currency;
 
@@ -64,7 +66,7 @@ export default function ItemsScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContainer}
           renderItem={({ item }) => (
-            <TouchableOpacity style={styles.row} onLongPress={() => handleDelete(item.id, item.name)} activeOpacity={0.7}>
+            <View style={styles.row}>
               <View style={styles.iconBox}>
                 <Text style={styles.icon}>{catEmoji[item.category] ?? '📦'}</Text>
               </View>
@@ -72,8 +74,19 @@ export default function ItemsScreen() {
                 <Text style={[styles.itemName, { color: theme.textHigh }]}>{item.name}</Text>
                 <Text style={[styles.itemCat, { color: theme.textLow }]}>{item.category}</Text>
               </View>
-              <Text style={[styles.itemPrice, { color: theme.textHigh }]}>{cur}{item.price.toLocaleString()}</Text>
-            </TouchableOpacity>
+              <View style={{ alignItems: 'flex-end' }}>
+                <Text style={[styles.itemPrice, { color: theme.textHigh }]}>{cur}{item.price.toLocaleString()}</Text>
+                <TouchableOpacity 
+                  style={[styles.itemRecordBtn, { backgroundColor: '#333' }]}
+                  onPress={() => router.push({ pathname: '/(tabs)/transactions', params: { add: 'true' } })}
+                >
+                  <Text style={styles.itemRecordText}>+ Record</Text>
+                </TouchableOpacity>
+              </View>
+              <TouchableOpacity onPress={() => handleDelete(item.id, item.name)} style={styles.deleteBtn}>
+                <Text style={{ fontSize: 14 }}>🗑️</Text>
+              </TouchableOpacity>
+            </View>
           )}
         />
       </View>
@@ -111,9 +124,12 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', paddingVertical: Spacing.md, borderBottomWidth: 1, borderBottomColor: '#F5F5F5' },
   iconBox: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#F2F2F7', alignItems: 'center', justifyContent: 'center' },
   icon: { fontSize: 22 },
-  itemName: { fontSize: 16, fontWeight: '600', marginBottom: 3 },
-  itemCat: { fontSize: 12, fontWeight: '500' },
-  itemPrice: { fontSize: 18, fontWeight: '800' },
+  itemName: { fontSize: 16, fontWeight: '600', marginBottom: 2 },
+  itemCat: { fontSize: 13, fontWeight: '500' },
+  itemPrice: { fontSize: 16, fontWeight: '800' },
+  itemRecordBtn: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10, marginTop: 4 },
+  itemRecordText: { color: '#FFF', fontSize: 11, fontWeight: '700' },
+  deleteBtn: { marginLeft: 16, padding: 8 },
   pickerLabel: { fontSize: 12, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: Spacing.sm },
   chip: { paddingHorizontal: Spacing.md, paddingVertical: 8, borderRadius: 20, backgroundColor: '#F2F2F7', marginRight: Spacing.sm },
   chipText: { fontSize: 14, fontWeight: '600' },

@@ -65,16 +65,19 @@ export default function DashboardScreen() {
             <Text style={styles.statEmoji}>👥</Text>
             <Text style={[styles.statValue, { color: theme.textHigh }]}>{customers}</Text>
             <Text style={[styles.statLabel, { color: theme.textLow }]}>Customers</Text>
+            <Text style={[styles.statSeeAll, { color: theme.primary }]}>See all →</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.statCard, { backgroundColor: '#FFF8F0' }]} onPress={() => router.push('/(tabs)/contacts')} activeOpacity={0.8}>
             <Text style={styles.statEmoji}>🏭</Text>
             <Text style={[styles.statValue, { color: theme.textHigh }]}>{vendors}</Text>
             <Text style={[styles.statLabel, { color: theme.textLow }]}>Vendors</Text>
+            <Text style={[styles.statSeeAll, { color: theme.primary }]}>See all →</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.statCard, { backgroundColor: '#F0FFF8' }]} onPress={() => router.push('/(tabs)/items')} activeOpacity={0.8}>
             <Text style={styles.statEmoji}>📦</Text>
             <Text style={[styles.statValue, { color: theme.textHigh }]}>{items.length}</Text>
             <Text style={[styles.statLabel, { color: theme.textLow }]}>Items</Text>
+            <Text style={[styles.statSeeAll, { color: theme.primary }]}>See all →</Text>
           </TouchableOpacity>
         </View>
 
@@ -160,6 +163,7 @@ const styles = StyleSheet.create({
   statEmoji: { fontSize: 20, marginBottom: 4 },
   statValue: { fontSize: 22, fontWeight: '800' },
   statLabel: { fontSize: 11, fontWeight: '600', marginTop: 2 },
+  statSeeAll: { fontSize: 10, fontWeight: '700', marginTop: 4, textTransform: 'uppercase' },
   insightCard: { padding: Spacing.md, borderRadius: 16, marginBottom: Spacing.md },
   insightText: { fontSize: 15, fontWeight: '500' },
   section: { marginBottom: Spacing.lg },

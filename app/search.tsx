@@ -33,14 +33,26 @@ export default function SearchScreen() {
     transactions.forEach(tx => {
       const contact = contacts.find(c => c.id === tx.contactId);
       const item = items.find(i => i.id === tx.itemId);
-      const haystack = [contact?.name ?? '', item?.name ?? '', tx.note ?? '', tx.expenseCategory ?? '', tx.date].join(' ').toLowerCase();
+      const displayDate = new Date(tx.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const amountStr = tx.amount.toString();
+      
+      const haystack = [
+        contact?.name ?? 'General Entry',
+        item?.name ?? '',
+        tx.note ?? '',
+        tx.expenseCategory ?? '',
+        displayDate,
+        amountStr,
+        cur
+      ].join(' ').toLowerCase();
+
       if (haystack.includes(q)) {
         const isIn = tx.type === 'Money In';
         out.push({
           type: 'transaction',
           id: tx.id,
           title: contact?.name ?? 'General Entry',
-          subtitle: `${new Date(tx.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}${item ? ' · ' + item.name : ''}${tx.note ? ' · ' + tx.note : ''}`,
+          subtitle: `${displayDate.split(',')[0]}${item ? ' · ' + item.name : ''}${tx.note ? ' · ' + tx.note : ''}`,
           right: `${isIn ? '+' : '-'}${cur}${tx.amount.toLocaleString()}`,
           rightColor: isIn ? theme.positive : theme.negative,
         });
@@ -62,7 +74,7 @@ export default function SearchScreen() {
 
     // Items
     items.forEach(i => {
-      if (i.name.toLowerCase().includes(q) || i.category.toLowerCase().includes(q)) {
+      if (i.name.toLowerCase().includes(q) || i.category.toLowerCase().includes(q) || i.price.toString().includes(q)) {
         out.push({
           type: 'item',
           id: i.id,

@@ -4,6 +4,7 @@ import {
 } from 'react-native';
 import { Colors, Spacing } from '@/constants/DesignSystem';
 import { useOSStore, EXPENSE_CATEGORIES, EXPENSE_CATEGORY_EMOJI } from '@/store/useOSStore';
+import { useRouter } from 'expo-router';
 
 type Period = '7D' | '30D' | '90D' | 'ALL';
 const PERIODS: Period[] = ['7D', '30D', '90D', 'ALL'];
@@ -17,6 +18,7 @@ function getDayCutoff(period: Period): Date | null {
 
 export default function ReportsScreen() {
   const theme = Colors.light;
+  const router = useRouter();
   const { transactions, contacts, items, identity } = useOSStore();
   const cur = identity.currency;
   const [period, setPeriod] = useState<Period>('30D');
@@ -163,8 +165,11 @@ export default function ReportsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: Spacing.lg, paddingTop: 48, paddingBottom: Spacing.xxl },
-  title: { fontSize: 32, fontWeight: '700', letterSpacing: -0.5, marginBottom: Spacing.lg },
+  container: { padding: Spacing.lg, paddingBottom: Spacing.xxl },
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.lg, marginTop: Spacing.md },
+  title: { fontSize: 32, fontWeight: '700', letterSpacing: -0.5 },
+  fab: { paddingHorizontal: Spacing.md, paddingVertical: 10, borderRadius: 20 },
+  fabText: { color: '#FFF', fontWeight: '700', fontSize: 14 },
   periodRow: { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.lg },
   periodBtn: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: '#F2F2F7' },
   periodText: { fontSize: 13, fontWeight: '700' },

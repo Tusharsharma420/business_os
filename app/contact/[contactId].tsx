@@ -47,15 +47,23 @@ export default function ContactDetailScreen() {
             <Text style={[styles.backText, { color: theme.primary }]}>← Back</Text>
           </TouchableOpacity>
 
-          {/* Avatar & Name */}
-          <View style={styles.profileSection}>
+          {/* Contact Header */}
+          <View style={styles.header}>
             <View style={[styles.avatar, { backgroundColor: color + '20' }]}>
               <Text style={[styles.avatarText, { color }]}>{contact.name.charAt(0).toUpperCase()}</Text>
             </View>
-            <Text style={[styles.contactName, { color: theme.textHigh }]}>{contact.name}</Text>
-            <View style={[styles.badge, { backgroundColor: color + '15' }]}>
-              <Text style={[styles.badgeText, { color }]}>{contact.type}</Text>
+            <View style={{ flex: 1, marginLeft: 16 }}>
+              <Text style={[styles.contactName, { color: theme.textHigh, textAlign: 'left', marginBottom: 4 }]}>{contact.name}</Text>
+              <View style={[styles.badge, { backgroundColor: color + '15', alignSelf: 'flex-start' }]}>
+                <Text style={[styles.badgeText, { color }]}>{contact.type}</Text>
+              </View>
             </View>
+            <TouchableOpacity 
+              style={[styles.recordBtn, { backgroundColor: theme.primary }]}
+              onPress={() => router.push({ pathname: '/(tabs)/transactions', params: { contactId: contact.id } })}
+            >
+              <Text style={styles.recordBtnText}>+ Record</Text>
+            </TouchableOpacity>
           </View>
 
           {/* Stats */}
@@ -141,4 +149,7 @@ const styles = StyleSheet.create({
   txSub: { fontSize: 12, fontWeight: '500' },
   txAmt: { fontSize: 16, fontWeight: '800' },
   invoiceHint: { fontSize: 11, fontWeight: '700', marginTop: 3 },
+  header: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
+  recordBtn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12 },
+  recordBtnText: { color: '#FFF', fontSize: 13, fontWeight: '700' },
 });
