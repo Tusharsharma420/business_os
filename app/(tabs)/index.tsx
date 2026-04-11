@@ -1,46 +1,37 @@
 import React from 'react';
-import { StyleSheet, View, Text, FlatList, SafeAreaView } from 'react-native';
+import { StyleSheet, View, Text, SafeAreaView } from 'react-native';
 import { Colors, Spacing } from '@/constants/DesignSystem';
 import { useOSStore } from '@/store/useOSStore';
 
 export default function DashboardScreen() {
   const theme = Colors.light;
-  const cashflow = useOSStore(state => state.cashflow);
-  const activityFeed = useOSStore(state => state.activityFeed);
+  const transactions = useOSStore(state => state.transactions);
+
+  // Compute minimal language insights
+  const moneyIn = transactions.filter(t => t.type === 'Money In').reduce((s, t) => s + t.amount, 0);
+  const moneyOut = transactions.filter(t => t.type === 'Money Out').reduce((s, t) => s + t.amount, 0);
+  const currentBalance = moneyIn - moneyOut;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={[styles.label, { color: theme.textLow }]}>Total Cashflow</Text>
-          <Text style={[styles.largeValue, { color: theme.textHigh }]}>
-            ${cashflow.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </Text>
-          <View style={[styles.sparkline, { backgroundColor: theme.primary }]} />
+        <Text style={[styles.greeting, { color: theme.textLow }]}>Overview</Text>
+        <Text style={[styles.statement, { color: theme.textHigh }]}>
+          Your net cash is <Text style={{ color: theme.positive }}>${currentBalance.toLocaleString()}</Text>.
+        </Text>
+        
+        <View style={styles.insightBox}>
+           <Text style={[styles.subStatement, { color: theme.textHigh }]}>
+             You've collected ${moneyIn.toLocaleString()} in revenue.
+           </Text>
         </View>
 
-        <View style={styles.activitySection}>
-          <Text style={[styles.sectionTitle, { color: theme.textHigh }]}>Activity Feed</Text>
-          <FlatList
-            data={activityFeed}
-            keyExtractor={item => item.id}
-            showsVerticalScrollIndicator={false}
-            renderItem={({ item }) => (
-              <View style={styles.activityRow}>
-                <Text style={[styles.activityTitle, { color: theme.textHigh }]}>{item.title}</Text>
-                {item.amount !== undefined && (
-                  <Text style={[
-                    styles.activityAmount, 
-                    { color: item.type === 'positive' ? theme.positive : theme.negative }
-                  ]}>
-                    {item.amount > 0 ? '+' : ''}${Math.abs(item.amount).toLocaleString()}
-                  </Text>
-                )}
-              </View>
-            )}
-            contentContainerStyle={styles.listContainer}
-          />
+        <View style={styles.insightBox}>
+           <Text style={[styles.subStatement, { color: theme.textHigh }]}>
+             You've spent ${moneyOut.toLocaleString()} in operations.
+           </Text>
         </View>
+
       </View>
     </SafeAreaView>
   );
@@ -49,52 +40,30 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: Spacing.lg,
+    padding: Spacing.xl,
+    paddingTop: 60,
   },
-  header: {
-    paddingVertical: Spacing.xl,
-    paddingBottom: Spacing.xxl,
-  },
-  label: {
+  greeting: {
     fontSize: 14,
     fontWeight: '600',
     textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: Spacing.xs,
-  },
-  largeValue: {
-    fontSize: 48,
-    fontWeight: '700',
-    letterSpacing: -1,
-  },
-  sparkline: {
-    height: 4,
-    width: 60,
-    marginTop: Spacing.md,
-    borderRadius: 2,
-  },
-  activitySection: {
-    flex: 1,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
     marginBottom: Spacing.md,
   },
-  listContainer: {
-    paddingBottom: Spacing.xl,
+  statement: {
+    fontSize: 32,
+    fontWeight: '700',
+    lineHeight: 40,
+    marginBottom: Spacing.xxl + 40,
+    letterSpacing: -1,
   },
-  activityRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: Spacing.md,
+  insightBox: {
+    padding: Spacing.lg,
+    backgroundColor: '#FAFAFA',
+    borderRadius: 16,
+    marginBottom: Spacing.md,
   },
-  activityTitle: {
+  subStatement: {
     fontSize: 16,
     fontWeight: '500',
-  },
-  activityAmount: {
-    fontSize: 16,
-    fontWeight: '600',
   }
 });

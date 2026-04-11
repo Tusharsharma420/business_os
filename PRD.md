@@ -1,60 +1,80 @@
-# Product Requirements Document: Unified Business OS
+# Product Requirements Document: Unified Business OS (Apple-Clean Version)
 
-## 0. Purpose & First Principles
-Every business operates as a system converting inputs (leads, time, inventory, capital) into outputs (revenue, products, services). This OS removes inter-application friction by unifying the core business pillars into a single database and interface. The platform must be universally accessible, deeply integrated across web and native mobile applications, and designed for scalability.
+## 0. Philosophy & First Principles
+The system must be invisible. It eliminates friction by removing traditional "modules" (Accounting, CRM, Inventory) and replacing them with three simple, universal actions. Everything else is metadata. The design is Apple-clean: no overthinking, no complex charts, just plain-language insights and frictionless data entry.
 
-## 1. System Modules (Atomic Units)
+## 1. Core Workflow (Daily Use)
 
-### 1.1 Customers (CRM)
-- **Objective:** Track and optimize the customer lifecycle.
-- **Inputs:** Lead data, communication logs, behavior metrics.
-- **Outputs:** Unified customer profile, LTV (Lifetime Value) calculation.
+### 1.1 🧾 Transactions (Money Engine)
+*Replaces: Accounting, Invoicing, Expenses, Revenue Tracking, Discounts, Pricing*
+- **What it does:** The single source of truth for all financial movements.
+- **Actions:** 
+  - Money In (Add Sale)
+  - Money Out (Add Expense)
+- **Engine Automations:** Auto P&L generation, auto invoice/receipt generation.
+- **Philosophy:** There is no "Accounting Module". You do not think about double-entry, debits, or credits. You just "Record a transaction" and the system handles the rest.
 
-### 1.2 Sales (Pipeline)
-- **Objective:** Convert leads to recognizable financial events.
-- **Inputs:** Deal stage, value, linked product/service.
-- **Outputs:** Sales forecasts, finalized orders.
+### 1.2 👤 Contacts (People Engine)
+*Replaces: Customers, Vendors, Manufacturers, Employees, Leads*
+- **What it does:** A single, unified database for every human or entity the business interacts with.
+- **Actions:** 
+  - Add/Edit Contact
+  - View relationship history and generated transactions.
+- **Tags:** Customer, Vendor, Partner.
+- **Philosophy:** One unified system. No duplication. A vendor today can be a customer tomorrow.
 
-### 1.3 Operations & Inventory Management
-- **Objective:** Manage assets or services being sold with deep customizability.
-- **Inputs:** Physical inventory (SKUs, stock levels, COGS) and Non-physical entities (Services, consulting hours, digital products, subscription tiers).
-- **Core Features:**
-  - **Product/Service Architecture:** Seamlessly handle both stocked physical items and abstract services independently.
-  - **Custom Configuration:** Adaptable fields for product variants, batch/lot tracking, or customizable service-specific parameters.
-- **Outputs:** Dynamic stock depletion tracing, real-time inventory levels, gross margin analysis.
+### 1.3 📦 Items (Product Engine)
+*Replaces: Complex product catalogs, service listings, complex inventory management*
+- **What it does:** The list of things being exchanged in transactions.
+- **Actions:** 
+  - Add/Edit products and services
+  - Assign Price and Category
+- **Philosophy:** Clean, editable, simple.
 
-### 1.4 Finance (Accounting & Money)
-- **Objective:** Real-time ledger of systemic entropy with robust double-entry mechanics.
-- **Inputs:** Sales inflows, expense outflows, direct general ledger entries.
-- **Core Features:**
-  - **Debit / Credit Ledger:** Strict double-entry accounting adherence. Manual, automated, and adjusted debit/credit entry support.
-  - **Multi-Firm Architecture:** Option to add and seamlessly act as multiple firms/business entities under a single unified dashboard, sharing global resources where necessary while maintaining rigidly separate financial and reporting boundaries.
-  - **Custom Invoices (Printable):** Dynamic invoice generation engine with custom layouts and templates. Must strictly support export to printable formats (PDF), itemized grouping (Products vs. Services), custom branding/logos per firm, and dynamic compliance/taxation details.
-- **Outputs:** Real-time P&L, Balance Sheet, Ledger activity, professional-grade printable invoices.
+## 2. Intelligence Layer & Dashboard
 
-### 1.5 People (HR & Marketing)
-- **Objective:** Manage human capital and outbound efforts.
-- **Inputs:** Employee details, marketing spend, payroll components.
-- **Outputs:** Payroll execution, Customer Acquisition Cost (CAC), Employee efficiency indexing.
+### 2.1 📊 Dashboard (The Apple Version)
+*Replaces: Traditional dashboards with charts, graphs, filters, and widgets.*
+- **What it does:** The very first thing the user sees. It tells them exactly what they need to know without forcing them to interpret raw data grids.
+- **Interface:** Simple, contextual, plain-language statements.
+  - *"You earned ₹25,000 today"*
+  - *"₹8,000 pending"*
+  - *"Top product: X"*
+  - *"3 customers unpaid"*
+- **Philosophy:** No thinking required.
 
-### 1.6 Global Activity & Notifications
-- **Objective:** The centralized nervous system for all state changes.
-- **Inputs:** State mutation events from any module (e.g., deal shifts, inventory drops, invoice generated).
-- **Outputs:** Real-time push notifications, chronologically sorted global activity feed.
+## 3. Supporting Layers (Hidden but Essential)
 
-### 1.7 Setup & Onboarding ("Easy Step-Up")
-- **Objective:** Minimal friction initialization.
-- **Core Feature:** Swift onboarding flow and setup wizard. Allows users to quickly instantiate single or multiple firms, pre-load standard chart of accounts, and define initial inventory/service catalogs with minimal clicks.
+### 3.1 ⚙️ Business Identity (Metadata)
+*Replaces: Complex configuration wizards and standalone setting features.*
+- **What it does:** The invisible metadata attached to the business identity.
+- **Elements:**
+  - Logo
+  - Signature
+  - Address
+  - Email
+  - Mobile Number
+- **Philosophy:** 1-time setup. It's not a feature of the daily workflow. Apple wouldn't build an app around adding your signature; it's simply meta-data applied automatically to outputs.
 
-## 2. Event-Driven Data Flow
-The system operates on an event-driven architecture to maintain state equilibrium:
-1. **Event: Deal/Sale Closed**
-   - → Triggers Invoice Generation with custom printable firm-specific template (Finance)
-   - → Automatically debits Accounts Receivable and credits Revenue (Finance)
-   - → Triggers physical inventory decrement—if a physical product is sold (Operations)
-   - → Fires notification to Global Activity Feed
+### 3.2 📄 Documents (Outputs)
+*Replaces: Embedded document editors or complex sheet views.*
+- **What it does:** Documents are strictly the auto-generated outputs of actions, never manual tasks to be "created from scratch".
+- **External Outputs (PDFs):** 
+  - Invoice PDF
+  - Receipt 
+  - Summary Report
+- **Internal Views (Sheets):** Simple editable tables for internal auditing. No spreadsheet formulas, no complexity.
 
-## 3. Scale & Platform Considerations
-- **Cross-Platform Compatibility:** Seamless function across Web, iOS, and Android using Expo.
-- **Time/Space Complexity:** Data retrieval must be `O(1)` for singular entities, leveraging NoSQL/Firebase scalability while ensuring structured relational integrity for double-entry accounting.
-- **Observability:** Every state mutation must generate a structured log `[timestamp, level, module, event, input, output]`.
+---
+
+## 🎯 Final MVP Structure
+**Core (What user uses daily)**
+1. **Transactions:** Add sale, Add expense, Auto profit calculation
+2. **Contacts:** Add customer/vendor, View history
+3. **Items:** Add/edit product or service
+
+**Supporting (Hidden but essential)**
+- **Business Identity:** Logo, Signature, Contact info
+
+**Intelligence Layer**
+- **Dashboard:** Plain insights, Alerts, Suggestions

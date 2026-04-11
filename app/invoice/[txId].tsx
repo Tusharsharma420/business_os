@@ -3,29 +3,26 @@ import { StyleSheet, View, Text, SafeAreaView, ScrollView, Image, TouchableOpaci
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors, Spacing } from '@/constants/DesignSystem';
 import { useOSStore } from '@/store/useOSStore';
-import { IconSymbol } from '@/components/ui/icon-symbol';
 
 export default function InvoiceScreen() {
   const { txId } = useLocalSearchParams();
   const router = useRouter();
   const theme = Colors.light;
 
-  const company = useOSStore(state => state.company);
+  const identity = useOSStore(state => state.identity);
   const transactions = useOSStore(state => state.transactions);
-  const deals = useOSStore(state => state.deals);
-  const products = useOSStore(state => state.products);
-  const customers = useOSStore(state => state.customers);
+  const items = useOSStore(state => state.items);
+  const contacts = useOSStore(state => state.contacts);
 
   const transaction = transactions.find(t => t.id === txId);
-  const deal = deals.find(d => d.id === transaction?.dealId);
-  const customer = customers.find(c => c.id === transaction?.customerId);
-  const product = products.find(p => p.id === deal?.productId);
+  const contact = contacts.find(c => c.id === transaction?.contactId);
+  const item = items.find(i => i.id === transaction?.itemId);
 
-  if (!transaction || !deal || !customer || !product) {
+  if (!transaction || !contact || !item) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
         <View style={styles.container}>
-          <Text style={{ color: theme.textHigh }}>Invoice data could not be computed. Missing relational data.</Text>
+          <Text style={{ color: theme.textHigh }}>Document generation failed. Missing relation.</Text>
           <TouchableOpacity onPress={() => router.back()} style={{ marginTop: 20 }}>
             <Text style={{ color: theme.primary, fontWeight: '700' }}>Go Back</Text>
           </TouchableOpacity>
@@ -34,25 +31,25 @@ export default function InvoiceScreen() {
     );
   }
 
+  const qty = transaction.qty || 1;
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
       <ScrollView contentContainerStyle={styles.container}>
-        {/* Navigation Bar */}
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
            <Text style={[styles.backText, { color: theme.primary }]}>← Back</Text>
         </TouchableOpacity>
 
-        {/* Invoice Header */}
         <View style={styles.header}>
           <View style={styles.brandGroup}>
             <Image 
-               source={{ uri: company.logoUrl }} 
+               source={{ uri: identity.logoUrl }} 
                style={styles.logo} 
                resizeMode="contain" 
             />
             <View>
-               <Text style={[styles.companyName, { color: theme.textHigh }]}>{company.name}</Text>
-               <Text style={[styles.taxId, { color: theme.textLow }]}>Tax ID: {company.taxId}</Text>
+               <Text style={[styles.companyName, { color: theme.textHigh }]}>{identity.name}</Text>
+               <Text style={[styles.taxId, { color: theme.textLow }]}>Tax ID: {identity.taxId}</Text>
             </View>
           </View>
           <Text style={[styles.invoiceTitle, { color: theme.textLow }]}>INVOICE</Text>
@@ -60,21 +57,19 @@ export default function InvoiceScreen() {
 
         <View style={styles.divider} />
 
-        {/* Billing Info */}
         <View style={styles.billingRow}>
           <View style={styles.billingCard}>
             <Text style={[styles.label, { color: theme.textLow }]}>Billed To:</Text>
-            <Text style={[styles.customerName, { color: theme.textHigh }]}>{customer.name}</Text>
-            <Text style={[styles.customerMeta, { color: theme.textLow }]}>Client ID: {customer.id}</Text>
+            <Text style={[styles.customerName, { color: theme.textHigh }]}>{contact.name}</Text>
+            <Text style={[styles.customerMeta, { color: theme.textLow }]}>{contact.type}</Text>
           </View>
           <View style={[styles.billingCard, { alignItems: 'flex-end' }]}>
-            <Text style={[styles.label, { color: theme.textLow }]}>Invoice No:</Text>
-            <Text style={[styles.invoiceId, { color: theme.textHigh }]}>#{transaction.id.replace('tx-', '')}</Text>
+            <Text style={[styles.label, { color: theme.textLow }]}>Transaction ID:</Text>
+            <Text style={[styles.invoiceId, { color: theme.textHigh }]}>#{transaction.id.replace('tx', '')}</Text>
             <Text style={[styles.customerMeta, { color: theme.textLow, marginTop: 4 }]}>Issued: {transaction.date}</Text>
           </View>
         </View>
 
-        {/* Line Items */}
         <View style={styles.tableHeader}>
            <Text style={[styles.label, { color: theme.textLow, flex: 3 }]}>Item</Text>
            <Text style={[styles.label, { color: theme.textLow, flex: 1, textAlign: 'center' }]}>Qty</Text>
@@ -82,10 +77,10 @@ export default function InvoiceScreen() {
         </View>
         <View style={styles.tableRow}>
            <View style={{ flex: 3 }}>
-              <Text style={[styles.productName, { color: theme.textHigh }]}>{product.name}</Text>
-              <Text style={[styles.productSku, { color: theme.textLow }]}>SKU: {product.sku}</Text>
+              <Text style={[styles.productName, { color: theme.textHigh }]}>{item.name}</Text>
+              <Text style={[styles.productSku, { color: theme.textLow }]}>{item.category}</Text>
            </View>
-           <Text style={[styles.productName, { color: theme.textHigh, flex: 1, textAlign: 'center' }]}>1</Text>
+           <Text style={[styles.productName, { color: theme.textHigh, flex: 1, textAlign: 'center' }]}>{qty}</Text>
            <Text style={[styles.productName, { color: theme.textHigh, flex: 1, textAlign: 'right' }]}>
              ${transaction.amount.toLocaleString()}
            </Text>
@@ -93,19 +88,16 @@ export default function InvoiceScreen() {
 
         <View style={styles.divider} />
 
-        {/* Total */}
         <View style={styles.totalRow}>
-           <Text style={[styles.totalLabel, { color: theme.textHigh }]}>Total Due</Text>
+           <Text style={[styles.totalLabel, { color: theme.textHigh }]}>Total Resolved</Text>
            <Text style={[styles.totalValue, { color: theme.primary }]}>${transaction.amount.toLocaleString()}</Text>
         </View>
 
-        {/* Signature */}
         <View style={styles.signatureContainer}>
            <View style={styles.signatureLine} />
-           <Text style={[styles.signatureAuth, { color: theme.textHigh }]}>{company.signatureName}</Text>
-           <Text style={[styles.signatureMeta, { color: theme.textLow }]}>Authorized Digital Signature</Text>
+           <Text style={[styles.signatureAuth, { color: theme.textHigh }]}>{identity.signatureName}</Text>
+           <Text style={[styles.signatureMeta, { color: theme.textLow }]}>Approved Digital Signature</Text>
         </View>
-
       </ScrollView>
     </SafeAreaView>
   );

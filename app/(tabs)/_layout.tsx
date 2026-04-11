@@ -1,72 +1,56 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { Colors } from '@/constants/DesignSystem';
-import { useColorScheme } from 'react-native';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-  const themeColors = Colors[colorScheme ?? 'light'];
+  const theme = Colors.light;
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: themeColors.primary,
-        tabBarInactiveTintColor: themeColors.textLow,
+        tabBarActiveTintColor: theme.primary,
+        tabBarInactiveTintColor: theme.textLow,
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: themeColors.background,
-          borderTopWidth: 0,
+          backgroundColor: theme.background,
+          borderTopColor: '#F0F0F0',
           elevation: 0,
           shadowOpacity: 0,
-        }
+        },
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Dashboard',
+          title: 'Home',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
         }}
       />
       <Tabs.Screen
-        name="customers"
+        name="transactions"
         options={{
-          title: 'CRM',
+          title: 'Money',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="repeat" color={color} />, // Fallback icon
+        }}
+      />
+      <Tabs.Screen
+        name="contacts"
+        options={{
+          title: 'Contacts',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.2.fill" color={color} />, // Fallback icon
         }}
       />
       <Tabs.Screen
-        name="ledger"
+        name="items"
         options={{
-          title: 'Ledger',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="chevron.left.forwardslash.chevron.right" color={color} />, // Fallback to avoid missing icons
-        }}
-      />
-      <Tabs.Screen
-        name="sales"
-        options={{
-          title: 'Sales',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="inventory"
-        options={{
-          title: 'Operations',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="briefcase.fill" color={color} />, // Fallback icon
-        }}
-      />
-      <Tabs.Screen
-        name="people"
-        options={{
-          title: 'Team',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.3.fill" color={color} />, // Fallback icon
+          title: 'Items',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="cube.fill" color={color} />, // Fallback icon
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          title: 'Settings',
+          title: 'Identity',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="gearshape.fill" color={color} />, // Fallback icon
         }}
       />

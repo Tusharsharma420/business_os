@@ -5,27 +5,27 @@ import { useOSStore } from '@/store/useOSStore';
 
 export default function SettingsScreen() {
   const theme = Colors.light;
-  const company = useOSStore(state => state.company);
-  const updateCompanyIdentity = useOSStore(state => state.updateCompanyIdentity);
+  const identity = useOSStore(state => state.identity);
+  const updateIdentity = useOSStore(state => state.updateIdentity);
 
-  const [name, setName] = useState(company.name);
-  const [taxId, setTaxId] = useState(company.taxId);
-  const [logoUrl, setLogoUrl] = useState(company.logoUrl);
-  const [signatureName, setSignatureName] = useState(company.signatureName);
+  const [name, setName] = useState(identity.name);
+  const [taxId, setTaxId] = useState(identity.taxId);
+  const [logoUrl, setLogoUrl] = useState(identity.logoUrl);
+  const [signatureName, setSignatureName] = useState(identity.signatureName);
 
   const handleSave = () => {
-    updateCompanyIdentity({ name, taxId, logoUrl, signatureName });
-    alert('Company Identity Saved Successfully.');
+    updateIdentity({ name, taxId, logoUrl, signatureName });
+    alert('Business Identity Saved');
   };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
       <ScrollView style={styles.container}>
-        <Text style={[styles.headerTitle, { color: theme.textHigh }]}>Settings</Text>
-        <Text style={[styles.subtitle, { color: theme.textLow }]}>White-Label Configuration</Text>
+        <Text style={[styles.headerTitle, { color: theme.textHigh }]}>Identity</Text>
+        <Text style={[styles.subtitle, { color: theme.textLow }]}>Your Business Metadata</Text>
         
         <View style={styles.formGroup}>
-          <Text style={[styles.label, { color: theme.textHigh }]}>Company Legal Name</Text>
+          <Text style={[styles.label, { color: theme.textHigh }]}>Business Name</Text>
           <TextInput 
             style={[styles.input, { borderColor: theme.surface, color: theme.textHigh }]} 
             value={name} 
@@ -45,7 +45,7 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.formGroup}>
-          <Text style={[styles.label, { color: theme.textHigh }]}>Logo Image Asset (URL)</Text>
+          <Text style={[styles.label, { color: theme.textHigh }]}>Logo Asset (URL)</Text>
           <TextInput 
             style={[styles.input, { borderColor: theme.surface, color: theme.textHigh }]} 
             value={logoUrl} 
@@ -55,7 +55,7 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.formGroup}>
-          <Text style={[styles.label, { color: theme.textHigh }]}>Digital Signature (Auth Name)</Text>
+          <Text style={[styles.label, { color: theme.textHigh }]}>Digital Signature</Text>
           <TextInput 
             style={[styles.input, { borderColor: theme.surface, color: theme.textHigh }]} 
             value={signatureName} 
@@ -69,7 +69,7 @@ export default function SettingsScreen() {
           onPress={handleSave}
           activeOpacity={0.8}
         >
-          <Text style={styles.saveBtnText}>Save Brand Variables</Text>
+          <Text style={styles.saveBtnText}>Save Metadata</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
