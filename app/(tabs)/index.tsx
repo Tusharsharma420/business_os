@@ -1,98 +1,101 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React from 'react';
+import { StyleSheet, View, Text, FlatList, SafeAreaView } from 'react-native';
+import { Colors, Spacing } from '@/constants/DesignSystem';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+const MOCK_ACTIVITY = [
+  { id: '1', title: 'Deal Closed', amount: 5000, type: 'positive' },
+  { id: '2', title: 'Inventory Low: AWS Servers', type: 'neutral' },
+  { id: '3', title: 'Payroll Processed', amount: -12500, type: 'negative' },
+];
 
-export default function HomeScreen() {
+export default function DashboardScreen() {
+  const theme = Colors.light;
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={[styles.label, { color: theme.textLow }]}>Total Cashflow</Text>
+          <Text style={[styles.largeValue, { color: theme.textHigh }]}>$124,500.00</Text>
+          
+          <View style={[styles.sparkline, { backgroundColor: theme.primary }]} />
+        </View>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+        <View style={styles.activitySection}>
+          <Text style={[styles.sectionTitle, { color: theme.textHigh }]}>Activity Feed</Text>
+          <FlatList
+            data={MOCK_ACTIVITY}
+            keyExtractor={item => item.id}
+            renderItem={({ item }) => (
+              <View style={styles.activityRow}>
+                <Text style={[styles.activityTitle, { color: theme.textHigh }]}>{item.title}</Text>
+                {item.amount && (
+                  <Text style={[
+                    styles.activityAmount, 
+                    { color: item.type === 'positive' ? theme.positive : theme.textHigh }
+                  ]}>
+                    {item.amount > 0 ? '+' : ''}{item.amount}
+                  </Text>
+                )}
+              </View>
+            )}
+            contentContainerStyle={styles.listContainer}
+          />
+        </View>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    padding: Spacing.lg,
+  },
+  header: {
+    paddingVertical: Spacing.xl,
+    paddingBottom: Spacing.xxl,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: Spacing.xs,
+  },
+  largeValue: {
+    fontSize: 48,
+    fontWeight: '700',
+    letterSpacing: -1,
+  },
+  sparkline: {
+    height: 4,
+    width: 60,
+    marginTop: Spacing.md,
+    borderRadius: 2,
+  },
+  activitySection: {
+    flex: 1,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: Spacing.md,
+  },
+  listContainer: {
+    paddingBottom: Spacing.xl,
+  },
+  activityRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+    justifyContent: 'space-between',
+    paddingVertical: Spacing.md,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  activityTitle: {
+    fontSize: 16,
+    fontWeight: '500',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
+  activityAmount: {
+    fontSize: 16,
+    fontWeight: '600',
+  }
 });
