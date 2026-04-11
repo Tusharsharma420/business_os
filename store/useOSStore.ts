@@ -12,6 +12,7 @@ export interface BusinessIdentity {
   phone: string;
   currency: string;
   taxRate: number; // percentage e.g. 18 for 18%
+  monthlyRevenueGoal: number;
 }
 
 export interface Contact {
@@ -26,6 +27,8 @@ export interface Item {
   name: string;
   price: number;
   category: string;
+  stock: number;
+  minStock: number;
 }
 
 export type ExpenseCategory =
@@ -72,6 +75,7 @@ interface OSState {
   addContact: (contact: Omit<Contact, 'id'>) => void;
   deleteContact: (id: string) => void;
   addItem: (item: Omit<Item, 'id'>) => void;
+  updateItem: (id: string, updates: Partial<Omit<Item, 'id'>>) => void;
   deleteItem: (id: string) => void;
 }
 
@@ -81,8 +85,8 @@ const SEED_CONTACTS: Contact[] = [
 ];
 
 const SEED_ITEMS: Item[] = [
-  { id: 'i1', name: 'Monthly Design Retainer', price: 5000, category: 'Service' },
-  { id: 'i2', name: 'Premium Server Rack', price: 1200, category: 'Hardware' },
+  { id: 'i1', name: 'Monthly Design Retainer', price: 5000, category: 'Service', stock: 999, minStock: 0 },
+  { id: 'i2', name: 'Premium Server Rack', price: 1200, category: 'Hardware', stock: 5, minStock: 2 },
 ];
 
 const SEED_TRANSACTIONS: Transaction[] = [
@@ -103,6 +107,7 @@ export const useOSStore = create<OSState>()(
         phone: '',
         currency: '₹',
         taxRate: 18,
+        monthlyRevenueGoal: 50000,
       },
       contacts: SEED_CONTACTS,
       items: SEED_ITEMS,
@@ -112,9 +117,21 @@ export const useOSStore = create<OSState>()(
         set((state) => ({ identity: { ...state.identity, ...config } })),
 
       addTransaction: (tx) =>
-        set((state) => ({
-          transactions: [{ id: `tx_${Date.now()}`, ...tx }, ...state.transactions],
-        })),
+        set((state) => {
+          // Auto-decrement stock for Money In transactions with an itemId
+          let updatedItems = state.items;
+          if (tx.type === 'Money In' && tx.itemId) {
+            updatedItems = state.items.map(item => 
+              item.id === tx.itemId 
+                ? { ...item, stock: item.stock - (tx.qty || 1) } 
+                : item
+            );
+          }
+          return {
+            items: updatedItems,
+            transactions: [{ id: `tx_${Date.now()}`, ...tx }, ...state.transactions],
+          };
+        }),
 
       deleteTransaction: (id) =>
         set((state) => ({
@@ -137,7 +154,12 @@ export const useOSStore = create<OSState>()(
 
       addItem: (i) =>
         set((state) => ({
-          items: [{ id: `i_${Date.now()}`, ...i }, ...state.items],
+          items: [{ id: `i_${Date.now()}`, ...i, stock: i.stock ?? 0, minStock: i.minStock ?? 0 }, ...state.items],
+        })),
+
+      updateItem: (id, updates) =>
+        set((state) => ({
+          items: state.items.map((i) => (i.id === id ? { ...i, ...updates } : i)),
         })),
 
       deleteItem: (id) =>

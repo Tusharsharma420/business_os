@@ -80,11 +80,11 @@ export default function TransactionsScreen() {
   };
 
   const handleQuickAddItem = () => {
-    if (!newItemName.trim()) return;
-    addItem({ name: newItemName.trim(), price: 0, category: 'General' });
-    setNewItemName('');
-    setIsAddingItem(false);
-    // New item will be last in the list
+    if (newItemName.trim()) {
+      addItem({ name: newItemName.trim(), price: parseFloat(amount) || 0, category: 'Hardware', stock: 0, minStock: 0 });
+      setNewItemName('');
+      setIsAddingItem(false);
+    }// New item will be last in the list
     setItemIdx(items.length);
   };
 

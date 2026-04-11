@@ -6,6 +6,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors, Spacing } from '@/constants/DesignSystem';
 import { useOSStore } from '@/store/useOSStore';
+import { PdfGenerator } from '@/utils/pdfGenerator';
 
 export default function InvoiceScreen() {
   const { txId } = useLocalSearchParams();
@@ -15,11 +16,14 @@ export default function InvoiceScreen() {
   const cur = identity.currency;
 
   const tx = transactions.find(t => t.id === txId);
-  const contact = contacts.find(c => c.id === tx?.contactId) ?? { name: 'Unknown Client', type: 'Other' as const };
+  const contact = contacts.find(c => c.id === tx?.contactId) ?? { name: 'Unknown Client', type: 'Other' as const, id: 'unknown' };
   const item = items.find(i => i.id === tx?.itemId) ?? { 
+    id: 'unknown',
     name: tx?.note || 'Professional Services', 
     price: tx?.amount || 0, 
-    category: 'General' 
+    category: 'General',
+    stock: 0,
+    minStock: 0
   };
 
   if (!tx) {
@@ -36,6 +40,14 @@ export default function InvoiceScreen() {
       </SafeAreaView>
     );
   }
+
+  const handleShare = async () => {
+    try {
+      await PdfGenerator.generateInvoice(tx, item as any, contact as any, identity);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const qty = tx.qty ?? 1;
   const unitPrice = item.price;
@@ -55,7 +67,9 @@ export default function InvoiceScreen() {
           <TouchableOpacity onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: theme.primary }]}>
             <Text style={styles.backBtnText}>← Back</Text>
           </TouchableOpacity>
-          <Text style={[styles.topBarTitle, { color: theme.textLow }]}>{invoiceNum}</Text>
+          <TouchableOpacity onPress={handleShare} style={[styles.shareBtn, { backgroundColor: '#333' }]}>
+            <Text style={styles.backBtnText}>Share PDF</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Paper */}
@@ -171,6 +185,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
   },
   backBtn: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
+  shareBtn: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
   backBtnText: { color: '#FFF', fontWeight: '700', fontSize: 14 },
   topBarTitle: { fontSize: 14, fontWeight: '600', fontFamily: 'monospace' },
   paper: {

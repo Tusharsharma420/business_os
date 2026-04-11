@@ -19,10 +19,15 @@ export default function SettingsScreen() {
   const [phone, setPhone] = useState(identity.phone);
   const [currency, setCurrency] = useState(identity.currency);
   const [taxRate, setTaxRate] = useState(String(identity.taxRate));
+  const [monthlyRevenueGoal, setMonthlyRevenueGoal] = useState(String(identity.monthlyRevenueGoal));
   const [saved, setSaved] = useState(false);
 
   const handleSave = () => {
-    updateIdentity({ name, taxId, logoUrl, signatureName, address, email, phone, currency, taxRate: parseFloat(taxRate) || 18 });
+    updateIdentity({ 
+      name, taxId, logoUrl, signatureName, address, email, phone, currency, 
+      taxRate: parseFloat(taxRate) || 18,
+      monthlyRevenueGoal: parseFloat(monthlyRevenueGoal) || 0 
+    });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -56,6 +61,7 @@ export default function SettingsScreen() {
         <Field label="Logo URL" value={logoUrl} onChange={setLogoUrl} placeholder="https://..." />
         <Field label="Digital Signature Name" value={signatureName} onChange={setSignatureName} placeholder="Authorized Signatory" />
         <Field label="Invoice Tax Rate (%)" value={taxRate} onChange={setTaxRate} placeholder="18" keyboard="decimal-pad" />
+        <Field label="Monthly Revenue Goal" value={monthlyRevenueGoal} onChange={setMonthlyRevenueGoal} placeholder="50000" keyboard="decimal-pad" />
 
         {/* Currency Selector */}
         <View style={styles.formGroup}>

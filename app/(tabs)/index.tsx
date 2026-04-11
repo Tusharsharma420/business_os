@@ -27,6 +27,20 @@ export default function DashboardScreen() {
   const customers = contacts.filter(c => c.type === 'Customer').length;
   const vendors = contacts.filter(c => c.type === 'Vendor').length;
 
+  // Low Stock Items
+  const lowStockItems = items.filter(i => i.stock <= i.minStock);
+
+  // Current Month Revenue
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthlyRevenue = transactions
+    .filter(t => t.type === 'Money In' && new Date(t.date) >= monthStart)
+    .reduce((s, t) => s + t.amount, 0);
+  
+  const goalProgress = identity.monthlyRevenueGoal > 0 
+    ? Math.min((monthlyRevenue / identity.monthlyRevenueGoal) * 100, 100) 
+    : 0;
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.container}>
@@ -58,6 +72,33 @@ export default function DashboardScreen() {
             <Text style={[styles.heroSub, { color: theme.negative }]}>↓ {cur}{moneyOut.toLocaleString()}</Text>
           </View>
         </View>
+
+        {/* Monthly Goal Progress */}
+        <View style={styles.goalCard}>
+          <View style={styles.goalHeader}>
+            <Text style={styles.goalLabel}>Monthly Goal</Text>
+            <Text style={styles.goalValue}>{goalProgress.toFixed(0)}%</Text>
+          </View>
+          <View style={styles.goalTrack}>
+            <View style={[styles.goalFill, { width: `${goalProgress}%`, backgroundColor: theme.primary }]} />
+          </View>
+          <Text style={styles.goalSub}>
+            {cur}{monthlyRevenue.toLocaleString()} of {cur}{identity.monthlyRevenueGoal.toLocaleString()}
+          </Text>
+        </View>
+
+        {/* Low Stock Alert */}
+        {lowStockItems.length > 0 && (
+          <TouchableOpacity 
+            style={[styles.alertCard, { borderColor: theme.negative }]} 
+            onPress={() => router.push('/(tabs)/items')}
+          >
+            <Text style={styles.alertEmoji}>⚠️</Text>
+            <Text style={styles.alertText}>
+              <Text style={{ fontWeight: '800' }}>{lowStockItems.length}</Text> items are low on stock
+            </Text>
+          </TouchableOpacity>
+        )}
 
         {/* Quick Stats Row */}
         <View style={styles.statsRow}>
@@ -158,6 +199,16 @@ const styles = StyleSheet.create({
   heroSubRow: { flexDirection: 'row', alignItems: 'center' },
   heroSub: { fontSize: 14, fontWeight: '700' },
   heroSubDot: { fontSize: 14 },
+  goalCard: { backgroundColor: '#F2F2F7', borderRadius: 16, padding: Spacing.md, marginBottom: Spacing.md },
+  goalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  goalLabel: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase', color: '#666' },
+  goalValue: { fontSize: 14, fontWeight: '800' },
+  goalTrack: { height: 6, backgroundColor: '#E5E5EA', borderRadius: 3, marginBottom: 8, overflow: 'hidden' },
+  goalFill: { height: '100%', borderRadius: 3 },
+  goalSub: { fontSize: 12, fontWeight: '500', color: '#666' },
+  alertCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF0F0', padding: 12, borderRadius: 12, marginBottom: Spacing.md, borderLeftWidth: 4 },
+  alertEmoji: { fontSize: 18, marginRight: 10 },
+  alertText: { fontSize: 14, fontWeight: '500', color: '#990000' },
   statsRow: { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.md },
   statCard: { flex: 1, padding: Spacing.md, borderRadius: 16, alignItems: 'center' },
   statEmoji: { fontSize: 20, marginBottom: 4 },
