@@ -3,6 +3,7 @@ import {
   StyleSheet, View, Text, FlatList,
   SafeAreaView, TouchableOpacity, ScrollView, Alert,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Colors, Spacing } from '@/constants/DesignSystem';
 import { useOSStore, Contact } from '@/store/useOSStore';
 import { BottomSheet } from '@/components/BottomSheet';
@@ -20,7 +21,9 @@ const typeColor: Record<ContactType, string> = {
 
 export default function ContactsScreen() {
   const theme = Colors.light;
-  const { contacts, transactions, addContact, deleteContact } = useOSStore();
+  const router = useRouter();
+  const { contacts, transactions, addContact, deleteContact, identity } = useOSStore();
+  const cur = identity.currency;
 
   const [sheetVisible, setSheetVisible] = useState(false);
   const [name, setName] = useState('');
@@ -58,7 +61,12 @@ export default function ContactsScreen() {
             const txCount = transactions.filter(t => t.contactId === item.id).length;
             const totalValue = transactions.filter(t => t.contactId === item.id && t.type === 'Money In').reduce((s, t) => s + t.amount, 0);
             return (
-              <TouchableOpacity style={styles.card} onLongPress={() => handleDelete(item.id, item.name)} activeOpacity={0.7}>
+              <TouchableOpacity
+                style={styles.card}
+                onPress={() => router.push({ pathname: '/contact/[contactId]', params: { contactId: item.id } })}
+                onLongPress={() => handleDelete(item.id, item.name)}
+                activeOpacity={0.7}
+              >
                 <View style={[styles.avatar, { backgroundColor: typeColor[item.type] + '20' }]}>
                   <Text style={[styles.avatarText, { color: typeColor[item.type] }]}>{item.name.charAt(0).toUpperCase()}</Text>
                 </View>
@@ -66,7 +74,7 @@ export default function ContactsScreen() {
                   <Text style={[styles.cardName, { color: theme.textHigh }]}>{item.name}</Text>
                   <Text style={[styles.cardSub, { color: theme.textLow }]}>
                     {txCount} transaction{txCount !== 1 ? 's' : ''}
-                    {totalValue > 0 ? ` · $${totalValue.toLocaleString()}` : ''}
+                    {totalValue > 0 ? ` · ${cur}${totalValue.toLocaleString()}` : ''}
                   </Text>
                 </View>
                 <View style={[styles.badge, { backgroundColor: typeColor[item.type] + '15' }]}>
