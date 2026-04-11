@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { FirebaseService } from '@/lib/firebaseService';
 
 export interface BusinessIdentity {
   name: string;
@@ -69,6 +70,7 @@ interface OSState {
   items: Item[];
   transactions: Transaction[];
 
+  uid: string | null;
   updateIdentity: (config: Partial<BusinessIdentity>) => void;
   addTransaction: (tx: Omit<Transaction, 'id'>) => void;
   deleteTransaction: (id: string) => void;
@@ -77,6 +79,7 @@ interface OSState {
   addItem: (item: Omit<Item, 'id'>) => void;
   updateItem: (id: string, updates: Partial<Omit<Item, 'id'>>) => void;
   deleteItem: (id: string) => void;
+  syncWithCloud: (uid: string) => Promise<void>;
 }
 
 const SEED_CONTACTS: Contact[] = [
@@ -96,7 +99,8 @@ const SEED_TRANSACTIONS: Transaction[] = [
 
 export const useOSStore = create<OSState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
+      uid: null,
       identity: {
         name: 'Your Business',
         taxId: '',
@@ -114,11 +118,14 @@ export const useOSStore = create<OSState>()(
       transactions: SEED_TRANSACTIONS,
 
       updateIdentity: (config) =>
-        set((state) => ({ identity: { ...state.identity, ...config } })),
+        set((state) => {
+          const next = { identity: { ...state.identity, ...config } };
+          if (state.uid) FirebaseService.updateIdentity(state.uid, next.identity);
+          return next;
+        }),
 
       addTransaction: (tx) =>
         set((state) => {
-          // Auto-decrement stock for Money In transactions with an itemId
           let updatedItems = state.items;
           if (tx.type === 'Money In' && tx.itemId) {
             updatedItems = state.items.map(item => 
@@ -127,52 +134,89 @@ export const useOSStore = create<OSState>()(
                 : item
             );
           }
+          const nextTransactions = [{ id: `tx_${Date.now()}`, ...tx }, ...state.transactions];
+          if (state.uid) {
+            FirebaseService.updateTransaction(state.uid, nextTransactions);
+            FirebaseService.updateItems(state.uid, updatedItems);
+          }
           return {
             items: updatedItems,
-            transactions: [{ id: `tx_${Date.now()}`, ...tx }, ...state.transactions],
+            transactions: nextTransactions,
           };
         }),
 
       deleteTransaction: (id) =>
-        set((state) => ({
-          transactions: state.transactions.filter((t) => t.id !== id),
-        })),
+        set((state) => {
+          const next = { transactions: state.transactions.filter((t) => t.id !== id) };
+          if (state.uid) FirebaseService.updateTransaction(state.uid, next.transactions);
+          return next;
+        }),
 
       addContact: (c) =>
-        set((state) => ({
-          contacts: [{ id: `c_${Date.now()}`, ...c }, ...state.contacts],
-        })),
+        set((state) => {
+          const next = { contacts: [{ id: `c_${Date.now()}`, ...c }, ...state.contacts] };
+          if (state.uid) FirebaseService.updateContacts(state.uid, next.contacts);
+          return next;
+        }),
 
       deleteContact: (id) =>
         set((state) => {
           const inUse = state.transactions.some((t) => t.contactId === id);
-          if (inUse) {
-            throw new Error('Contact in use. Clear transactions first.');
-          }
-          return { contacts: state.contacts.filter((c) => c.id !== id) };
+          if (inUse) throw new Error('Contact in use. Clear transactions first.');
+          const next = { contacts: state.contacts.filter((c) => c.id !== id) };
+          if (state.uid) FirebaseService.updateContacts(state.uid, next.contacts);
+          return next;
         }),
 
       addItem: (i) =>
-        set((state) => ({
-          items: [{ id: `i_${Date.now()}`, ...i, stock: i.stock ?? 0, minStock: i.minStock ?? 0 }, ...state.items],
-        })),
+        set((state) => {
+          const next = { items: [{ id: `i_${Date.now()}`, ...i, stock: i.stock ?? 0, minStock: i.minStock ?? 0 }, ...state.items] };
+          if (state.uid) FirebaseService.updateItems(state.uid, next.items);
+          return next;
+        }),
 
       updateItem: (id, updates) =>
-        set((state) => ({
-          items: state.items.map((i) => (i.id === id ? { ...i, ...updates } : i)),
-        })),
+        set((state) => {
+          const next = { items: state.items.map((i) => (i.id === id ? { ...i, ...updates } : i)) };
+          if (state.uid) FirebaseService.updateItems(state.uid, next.items);
+          return next;
+        }),
 
       deleteItem: (id) =>
         set((state) => {
           const inUse = state.transactions.some((t) => t.itemId === id);
-          if (inUse) {
-            throw new Error('Item in use. Clear transactions first.');
-          }
-          return { items: state.items.filter((i) => i.id !== id) };
+          if (inUse) throw new Error('Item in use. Clear transactions first.');
+          const next = { items: state.items.filter((i) => i.id !== id) };
+          if (state.uid) FirebaseService.updateItems(state.uid, next.items);
+          return next;
         }),
+
+      syncWithCloud: async (uid) => {
+        set({ uid });
+        const cloudData = await FirebaseService.fetchUserData(uid);
+        
+        if (cloudData) {
+          // Cloud exists: Hydrate state (Merging strategy: Cloud wins)
+          set({
+            identity: { ...get().identity, ...cloudData.identity },
+            contacts: cloudData.contacts || get().contacts,
+            items: cloudData.items || get().items,
+            transactions: cloudData.transactions || get().transactions,
+          });
+        } else {
+          // Cloud empty: Push local migration
+          const state = get();
+          await FirebaseService.saveFullSync(uid, {
+            identity: state.identity,
+            contacts: state.contacts,
+            items: state.items,
+            transactions: state.transactions,
+          });
+        }
+      },
     }),
     {
-      name: 'business-os-v26',
+      name: 'business-os-v2.9',
       storage: createJSONStorage(() => AsyncStorage),
     }
   )
