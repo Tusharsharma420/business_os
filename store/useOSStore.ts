@@ -18,8 +18,18 @@ export interface Product {
   id: string;
   sku: string;
   name: string;
-  stockLevel: number;
+  itemType: 'physical' | 'service'; // V1.4 Distinction
+  stockLevel?: number; // Optional for Services
   cogs: number;
+}
+
+export interface Employee {
+  id: string;
+  name: string;
+  role: string;
+  salary: number;
+  status: 'Active' | 'On Leave';
+  cacImpact: number; // Basic marketing index
 }
 
 export interface Transaction {
@@ -27,8 +37,8 @@ export interface Transaction {
   name: string;
   date: string;
   amount: number;
-  customerId?: string; // Relational
-  dealId?: string;     // Relational
+  customerId?: string; 
+  dealId?: string;     
 }
 
 export interface Deal {
@@ -49,6 +59,7 @@ export interface Activity {
 interface OSState {
   company: CompanyIdentity;
   cashflow: number;
+  team: Employee[];
   customers: Customer[];
   products: Product[];
   transactions: Transaction[];
@@ -71,6 +82,12 @@ export const useOSStore = create<OSState>((set) => ({
   
   cashflow: 124500.00,
   
+  team: [
+    { id: 'e1', name: 'Alice Waverly', role: 'VP Sales', salary: 145000, status: 'Active', cacImpact: 0 },
+    { id: 'e2', name: 'Bob Constructor', role: 'Lead Engineer', salary: 160000, status: 'Active', cacImpact: 0 },
+    { id: 'e3', name: 'Charlie Marketing', role: 'Head of Growth', salary: 110000, status: 'Active', cacImpact: 15000 },
+  ],
+
   customers: [
     { id: 'c1', name: 'Amazon Web Services', lifetimeValue: 450000, status: 'Active' },
     { id: 'c2', name: 'Global Tech', lifetimeValue: 12500, status: 'Active' },
@@ -79,9 +96,10 @@ export const useOSStore = create<OSState>((set) => ({
   ],
 
   products: [
-    { id: 'p1', sku: 'AWS-EC2-YZ', name: 'Enterprise Server Node', stockLevel: 15, cogs: 800 },
-    { id: 'p2', sku: 'SAAS-LIC-1Y', name: 'Annual Software License', stockLevel: 999, cogs: 0 },
-    { id: 'p3', sku: 'HDW-SRV-99', name: 'Physical Server Unit', stockLevel: 4, cogs: 4500 },
+    { id: 'p1', sku: 'AWS-EC2-YZ', name: 'Enterprise Server Node', itemType: 'physical', stockLevel: 15, cogs: 800 },
+    { id: 'p2', sku: 'SAAS-LIC-1Y', name: 'Annual Software License', itemType: 'service', cogs: 0 },
+    { id: 'p3', sku: 'HDW-SRV-99', name: 'Physical Server Unit', itemType: 'physical', stockLevel: 4, cogs: 4500 },
+    { id: 'p4', sku: 'CONSULT-HR', name: 'Integration Consulting (Hour)', itemType: 'service', cogs: 50 },
   ],
 
   transactions: [
@@ -93,7 +111,7 @@ export const useOSStore = create<OSState>((set) => ({
     { id: 'd1', customerId: 'c1', productId: 'p1', value: 85000, stage: 'Negotiation' },
     { id: 'd2', customerId: 'c2', productId: 'p3', value: 12000, stage: 'Lead' },
     { id: 'd3', customerId: 'c3', productId: 'p2', value: 4500, stage: 'Lead' },
-    { id: 'd4', customerId: 'c4', productId: 'p2', value: 5000, stage: 'Closed' },
+    { id: 'd4', customerId: 'c4', productId: 'p4', value: 2000, stage: 'Closed' },
   ],
   
   activityFeed: [
@@ -143,22 +161,33 @@ export const useOSStore = create<OSState>((set) => ({
         name: `Deal Closed: ${customerName}`,
         date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         amount: deal.value,
-        customerId: deal.customerId, // V1.3
-        dealId: deal.id              // V1.3
+        customerId: deal.customerId, 
+        dealId: deal.id              
       });
 
       const productIndex = newProducts.findIndex(p => p.id === deal.productId);
       if (productIndex !== -1) {
-        newProducts[productIndex] = {
-          ...newProducts[productIndex],
-          stockLevel: newProducts[productIndex].stockLevel - 1
-        };
-        
-        inventoryActivity = {
-           id: Date.now().toString() + '-inv',
-           title: `Stock Depleted: ${newProducts[productIndex].sku} (-1 Unit)`,
-           type: 'neutral'
-        };
+        // V1.4 Mathematical check: ONLY deplete if physical
+        if (newProducts[productIndex].itemType === 'physical') {
+           const currentStock = newProducts[productIndex].stockLevel || 0;
+           newProducts[productIndex] = {
+             ...newProducts[productIndex],
+             stockLevel: Math.max(0, currentStock - 1)
+           };
+           
+           inventoryActivity = {
+              id: Date.now().toString() + '-inv',
+              title: `Stock Depleted: ${newProducts[productIndex].sku} (-1 Unit)`,
+              type: 'neutral'
+           };
+        } else {
+           // It's a service, map an info log instead.
+           inventoryActivity = {
+              id: Date.now().toString() + '-svc',
+              title: `Service Executed: ${newProducts[productIndex].name}`,
+              type: 'neutral'
+           };
+        }
       }
 
       const customerIndex = newCustomers.findIndex(c => c.id === deal.customerId);

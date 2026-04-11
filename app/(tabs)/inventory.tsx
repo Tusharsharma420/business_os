@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, Text, FlatList, SafeAreaView } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, SafeAreaView } from 'react-native';
 import { Colors, Spacing } from '@/constants/DesignSystem';
 import { useOSStore } from '@/store/useOSStore';
 
@@ -7,59 +7,79 @@ export default function InventoryScreen() {
   const theme = Colors.light;
   const products = useOSStore(state => state.products);
 
+  const physicalProducts = products.filter(p => p.itemType === 'physical');
+  const services = products.filter(p => p.itemType === 'service');
+
+  const renderItem = (item: any) => (
+    <View key={item.id} style={styles.row}>
+      <View>
+        <Text style={[styles.name, { color: theme.textHigh }]}>{item.name}</Text>
+        <Text style={[styles.sku, { color: theme.textLow }]}>{item.sku}</Text>
+      </View>
+      <View style={styles.stockContainer}>
+        {item.itemType === 'physical' ? (
+          <>
+            <Text style={[
+              styles.stockLevel,
+              { color: (item.stockLevel || 0) < 5 ? theme.negative : theme.textHigh }
+            ]}>
+              {item.stockLevel}
+            </Text>
+            <Text style={[styles.stockLabel, { color: theme.textLow }]}>in stock</Text>
+          </>
+        ) : (
+          <>
+            <Text style={[styles.stockLevel, { color: theme.primary, fontSize: 18 }]}>∞</Text>
+            <Text style={[styles.stockLabel, { color: theme.textLow }]}>Service</Text>
+          </>
+        )}
+      </View>
+    </View>
+  );
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
-      <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.container}>
         <Text style={[styles.headerTitle, { color: theme.textHigh }]}>Operations</Text>
-        <Text style={[styles.subtitle, { color: theme.textLow }]}>Live Inventory & SKUs</Text>
         
-        <FlatList
-          data={products}
-          keyExtractor={item => item.id}
-          showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => (
-            <View style={styles.row}>
-              <View>
-                <Text style={[styles.name, { color: theme.textHigh }]}>{item.name}</Text>
-                <Text style={[styles.sku, { color: theme.textLow }]}>{item.sku}</Text>
-              </View>
-              <View style={styles.stockContainer}>
-                <Text style={[
-                  styles.stockLevel,
-                  { color: item.stockLevel < 5 ? theme.negative : theme.textHigh }
-                ]}>
-                  {item.stockLevel}
-                </Text>
-                <Text style={[styles.stockLabel, { color: theme.textLow }]}>in stock</Text>
-              </View>
-            </View>
-          )}
-          contentContainerStyle={styles.listContainer}
-        />
-      </View>
+        {/* Physical Products */}
+        <Text style={[styles.sectionTitle, { color: theme.textHigh }]}>Physical Goods</Text>
+        <View style={styles.listContainer}>
+          {physicalProducts.map(renderItem)}
+        </View>
+
+        {/* Services */}
+        <Text style={[styles.sectionTitle, { color: theme.textHigh, marginTop: Spacing.xl }]}>Services & Digital</Text>
+        <View style={styles.listContainer}>
+          {services.map(renderItem)}
+        </View>
+
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     padding: Spacing.lg,
+    paddingBottom: 80,
   },
   headerTitle: {
     fontSize: 32,
     fontWeight: '700',
     letterSpacing: -0.5,
-    marginBottom: Spacing.xs,
+    marginBottom: Spacing.xl,
     marginTop: Spacing.md,
   },
-  subtitle: {
-    fontSize: 16,
-    marginBottom: Spacing.xl,
-    fontWeight: '500',
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: Spacing.md,
   },
   listContainer: {
-    paddingBottom: Spacing.xl,
+    backgroundColor: '#FAFAFA',
+    borderRadius: 12,
+    paddingHorizontal: Spacing.md,
   },
   row: {
     flexDirection: 'row',
@@ -70,12 +90,12 @@ const styles = StyleSheet.create({
     borderBottomColor: '#F0F0F0',
   },
   name: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     marginBottom: Spacing.xs,
   },
   sku: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '500',
     fontFamily: 'monospace',
   },
@@ -83,12 +103,12 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   stockLevel: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '700',
   },
   stockLabel: {
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: 10,
+    fontWeight: '600',
     textTransform: 'uppercase',
   }
 });

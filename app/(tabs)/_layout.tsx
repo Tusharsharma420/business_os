@@ -57,6 +57,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="people"
+        options={{
+          title: 'Team',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.3.fill" color={color} />, // Fallback icon
+        }}
+      />
+      <Tabs.Screen
         name="settings"
         options={{
           title: 'Settings',

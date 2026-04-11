@@ -36,7 +36,7 @@ export default function LedgerScreen() {
                  {item.dealId && (
                    <TouchableOpacity 
                      style={styles.invoiceBtn} 
-                     onPress={() => router.push(`/invoice/${item.id}`)}
+                     onPress={() => router.push({ pathname: '/invoice/[txId]', params: { txId: item.id } })}
                    >
                      <Text style={[styles.invoiceBtnText, { color: theme.primary }]}>View Invoice</Text>
                    </TouchableOpacity>
