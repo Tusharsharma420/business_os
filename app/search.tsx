@@ -40,7 +40,7 @@ export default function SearchScreen() {
           type: 'transaction',
           id: tx.id,
           title: contact?.name ?? 'General Entry',
-          subtitle: `${tx.date}${item ? ' · ' + item.name : ''}${tx.note ? ' · ' + tx.note : ''}`,
+          subtitle: `${new Date(tx.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}${item ? ' · ' + item.name : ''}${tx.note ? ' · ' + tx.note : ''}`,
           right: `${isIn ? '+' : '-'}${cur}${tx.amount.toLocaleString()}`,
           rightColor: isIn ? theme.positive : theme.negative,
         });

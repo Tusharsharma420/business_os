@@ -104,7 +104,9 @@ export default function DashboardScreen() {
                   <View style={[styles.activityDot, { backgroundColor: isIn ? theme.positive : theme.negative }]} />
                   <View style={{ flex: 1, marginLeft: 12 }}>
                     <Text style={[styles.activityName, { color: theme.textHigh }]}>{contact?.name ?? 'Entry'}</Text>
-                    <Text style={[styles.activityDate, { color: theme.textLow }]}>{tx.date}</Text>
+                    <Text style={[styles.activityDate, { color: theme.textLow }]}>
+                      {new Date(tx.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </Text>
                   </View>
                   <Text style={[styles.activityAmt, { color: isIn ? theme.positive : theme.negative }]}>
                     {isIn ? '+' : '-'}{cur}{tx.amount.toLocaleString()}

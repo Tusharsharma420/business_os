@@ -25,7 +25,7 @@ export default function ReportsScreen() {
     const cutoff = getDayCutoff(period);
     if (!cutoff) return transactions;
     return transactions.filter(t => {
-      const parsed = new Date(t.date + ` ${new Date().getFullYear()}`);
+      const parsed = new Date(t.date);
       return isNaN(parsed.getTime()) || parsed >= cutoff;
     });
   }, [transactions, period]);

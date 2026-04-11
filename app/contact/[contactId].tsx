@@ -97,7 +97,7 @@ export default function ContactDetailScreen() {
                       {item?.name ?? (tx.expenseCategory ? `${EXPENSE_CATEGORY_EMOJI[tx.expenseCategory]} ${tx.expenseCategory}` : 'Entry')}
                     </Text>
                     <Text style={[styles.txSub, { color: theme.textLow }]}>
-                      {tx.date}{tx.note ? ` · ${tx.note}` : ''}
+                      {new Date(tx.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}{tx.note ? ` · ${tx.note}` : ''}
                     </Text>
                   </View>
                   <View style={{ alignItems: 'flex-end' }}>

@@ -34,7 +34,17 @@ export default function ItemsScreen() {
   const handleDelete = (id: string, iName: string) => {
     Alert.alert(`Delete "${iName}"?`, 'This cannot be undone.', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => deleteItem(id) },
+      { 
+        text: 'Delete', 
+        style: 'destructive', 
+        onPress: () => {
+          try {
+            deleteItem(id);
+          } catch (e: any) {
+            Alert.alert('Cannot Delete', e.message);
+          }
+        } 
+      },
     ]);
   };
 

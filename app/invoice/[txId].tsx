@@ -15,16 +15,20 @@ export default function InvoiceScreen() {
   const cur = identity.currency;
 
   const tx = transactions.find(t => t.id === txId);
-  const contact = contacts.find(c => c.id === tx?.contactId);
-  const item = items.find(i => i.id === tx?.itemId);
+  const contact = contacts.find(c => c.id === tx?.contactId) ?? { name: 'Unknown Client', type: 'Other' as const };
+  const item = items.find(i => i.id === tx?.itemId) ?? { 
+    name: tx?.note || 'Professional Services', 
+    price: tx?.amount || 0, 
+    category: 'General' 
+  };
 
-  if (!tx || !contact || !item) {
+  if (!tx) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
         <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
           <Text style={{ fontSize: 40 }}>⚠️</Text>
-          <Text style={[styles.errorTitle, { color: theme.textHigh }]}>Invoice Unavailable</Text>
-          <Text style={[styles.errorSub, { color: theme.textLow }]}>Missing contact or item relation.</Text>
+          <Text style={[styles.errorTitle, { color: theme.textHigh }]}>Invoice Not Found</Text>
+          <Text style={[styles.errorSub, { color: theme.textLow }]}>Transaction record is missing.</Text>
           <TouchableOpacity onPress={() => router.back()} style={[styles.backPill, { backgroundColor: theme.primary }]}>
             <Text style={styles.backPillText}>Go Back</Text>
           </TouchableOpacity>
@@ -40,7 +44,7 @@ export default function InvoiceScreen() {
   const taxAmount = subtotal * taxRate;
   const total = subtotal + taxAmount;
   const invoiceNum = `INV-${tx.id.replace('tx_', '').replace('tx', '').padStart(6, '0')}`;
-  const issueDate = tx.date;
+  const issueDate = new Date(tx.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#F8F8F8' }}>

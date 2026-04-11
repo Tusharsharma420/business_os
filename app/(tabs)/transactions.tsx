@@ -38,7 +38,7 @@ export default function TransactionsScreen() {
     const parsed = parseFloat(amount);
     if (!parsed || isNaN(parsed)) return;
     addTransaction({
-      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      date: new Date().toISOString(),
       type: txType,
       amount: parsed,
       contactId: contacts[contactIdx]?.id,
@@ -94,6 +94,7 @@ export default function TransactionsScreen() {
             const product = items.find(i => i.id === item.itemId);
             const isIn = item.type === 'Money In';
             const catEmoji = item.expenseCategory ? EXPENSE_CATEGORY_EMOJI[item.expenseCategory] : null;
+            const displayDate = new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
             return (
               <TouchableOpacity style={styles.row} onLongPress={() => handleDelete(item.id)} activeOpacity={0.7}>
                 <View style={[styles.dot, { backgroundColor: isIn ? theme.positive : theme.negative }]} />
@@ -102,7 +103,7 @@ export default function TransactionsScreen() {
                     {contact?.name ?? 'General Entry'}
                   </Text>
                   <Text style={[styles.rowSub, { color: theme.textLow }]}>
-                    {item.date}
+                    {displayDate}
                     {catEmoji ? ` · ${catEmoji} ${item.expenseCategory}` : ''}
                     {product ? ` · ${product.name}` : ''}
                     {item.note ? ` · ${item.note}` : ''}

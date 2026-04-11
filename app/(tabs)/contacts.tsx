@@ -38,7 +38,17 @@ export default function ContactsScreen() {
   const handleDelete = (id: string, cName: string) => {
     Alert.alert(`Delete "${cName}"?`, 'This will not delete their transactions.', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => deleteContact(id) },
+      { 
+        text: 'Delete', 
+        style: 'destructive', 
+        onPress: () => {
+          try {
+            deleteContact(id);
+          } catch (e: any) {
+            Alert.alert('Cannot Delete', e.message);
+          }
+        } 
+      },
     ]);
   };
 

@@ -86,8 +86,8 @@ const SEED_ITEMS: Item[] = [
 ];
 
 const SEED_TRANSACTIONS: Transaction[] = [
-  { id: 'tx1', date: 'Oct 24', type: 'Money Out', amount: 500, contactId: 'c1', expenseCategory: 'Marketing', note: 'Q4 campaign' },
-  { id: 'tx2', date: 'Oct 25', type: 'Money In', amount: 10000, contactId: 'c2', itemId: 'i1', qty: 2, note: 'Design retainer x2' },
+  { id: 'tx1', date: '2024-10-24T10:00:00.000Z', type: 'Money Out', amount: 500, contactId: 'c1', expenseCategory: 'Marketing', note: 'Q4 campaign' },
+  { id: 'tx2', date: '2024-10-25T15:30:00.000Z', type: 'Money In', amount: 10000, contactId: 'c2', itemId: 'i1', qty: 2, note: 'Design retainer x2' },
 ];
 
 export const useOSStore = create<OSState>()(
@@ -127,9 +127,13 @@ export const useOSStore = create<OSState>()(
         })),
 
       deleteContact: (id) =>
-        set((state) => ({
-          contacts: state.contacts.filter((c) => c.id !== id),
-        })),
+        set((state) => {
+          const inUse = state.transactions.some((t) => t.contactId === id);
+          if (inUse) {
+            throw new Error('Contact in use. Clear transactions first.');
+          }
+          return { contacts: state.contacts.filter((c) => c.id !== id) };
+        }),
 
       addItem: (i) =>
         set((state) => ({
@@ -137,12 +141,16 @@ export const useOSStore = create<OSState>()(
         })),
 
       deleteItem: (id) =>
-        set((state) => ({
-          items: state.items.filter((i) => i.id !== id),
-        })),
+        set((state) => {
+          const inUse = state.transactions.some((t) => t.itemId === id);
+          if (inUse) {
+            throw new Error('Item in use. Clear transactions first.');
+          }
+          return { items: state.items.filter((i) => i.id !== id) };
+        }),
     }),
     {
-      name: 'business-os-v24',
+      name: 'business-os-v26',
       storage: createJSONStorage(() => AsyncStorage),
     }
   )
