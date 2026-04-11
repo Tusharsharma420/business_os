@@ -16,7 +16,8 @@ const catEmoji: Record<string, string> = {
 
 export default function ItemsScreen() {
   const theme = Colors.light;
-  const { items, addItem, deleteItem } = useOSStore();
+  const { items, addItem, deleteItem, identity } = useOSStore();
+  const cur = identity.currency;
 
   const [sheetVisible, setSheetVisible] = useState(false);
   const [name, setName] = useState('');
@@ -61,7 +62,7 @@ export default function ItemsScreen() {
                 <Text style={[styles.itemName, { color: theme.textHigh }]}>{item.name}</Text>
                 <Text style={[styles.itemCat, { color: theme.textLow }]}>{item.category}</Text>
               </View>
-              <Text style={[styles.itemPrice, { color: theme.textHigh }]}>${item.price.toLocaleString()}</Text>
+              <Text style={[styles.itemPrice, { color: theme.textHigh }]}>{cur}{item.price.toLocaleString()}</Text>
             </TouchableOpacity>
           )}
         />

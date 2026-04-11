@@ -12,6 +12,7 @@ export default function InvoiceScreen() {
   const router = useRouter();
   const theme = Colors.light;
   const { identity, transactions, items, contacts } = useOSStore();
+  const cur = identity.currency;
 
   const tx = transactions.find(t => t.id === txId);
   const contact = contacts.find(c => c.id === tx?.contactId);
@@ -35,7 +36,7 @@ export default function InvoiceScreen() {
   const qty = tx.qty ?? 1;
   const unitPrice = item.price;
   const subtotal = unitPrice * qty;
-  const taxRate = 0.18; // 18% GST — configurable in future
+  const taxRate = identity.taxRate / 100;
   const taxAmount = subtotal * taxRate;
   const total = subtotal + taxAmount;
   const invoiceNum = `INV-${tx.id.replace('tx_', '').replace('tx', '').padStart(6, '0')}`;
@@ -109,23 +110,23 @@ export default function InvoiceScreen() {
               {tx.note && <Text style={[styles.tdSub, { color: theme.textLow }]}>{tx.note}</Text>}
             </View>
             <Text style={[styles.td, { flex: 1, textAlign: 'center', color: theme.textHigh }]}>{qty}</Text>
-            <Text style={[styles.td, { flex: 1, textAlign: 'right', color: theme.textHigh }]}>${unitPrice.toLocaleString()}</Text>
-            <Text style={[styles.td, { flex: 1, textAlign: 'right', color: theme.textHigh }]}>${subtotal.toLocaleString()}</Text>
+            <Text style={[styles.td, { flex: 1, textAlign: 'right', color: theme.textHigh }]}>{cur}{unitPrice.toLocaleString()}</Text>
+            <Text style={[styles.td, { flex: 1, textAlign: 'right', color: theme.textHigh }]}>{cur}{subtotal.toLocaleString()}</Text>
           </View>
 
           {/* Subtotals */}
           <View style={styles.subtotalBlock}>
             <View style={styles.subtotalRow}>
               <Text style={[styles.subtotalLabel, { color: theme.textLow }]}>Subtotal</Text>
-              <Text style={[styles.subtotalValue, { color: theme.textHigh }]}>${subtotal.toLocaleString()}</Text>
+              <Text style={[styles.subtotalValue, { color: theme.textHigh }]}>{cur}{subtotal.toLocaleString()}</Text>
             </View>
             <View style={styles.subtotalRow}>
-              <Text style={[styles.subtotalLabel, { color: theme.textLow }]}>Tax (18%)</Text>
-              <Text style={[styles.subtotalValue, { color: theme.textHigh }]}>${taxAmount.toFixed(2)}</Text>
+              <Text style={[styles.subtotalLabel, { color: theme.textLow }]}>Tax ({identity.taxRate}%)</Text>
+              <Text style={[styles.subtotalValue, { color: theme.textHigh }]}>{cur}{taxAmount.toFixed(2)}</Text>
             </View>
             <View style={[styles.subtotalRow, styles.totalRow]}>
               <Text style={[styles.totalLabel, { color: theme.textHigh }]}>Total Due</Text>
-              <Text style={[styles.totalValue, { color: theme.positive }]}>${total.toFixed(2)}</Text>
+              <Text style={[styles.totalValue, { color: theme.positive }]}>{cur}{total.toFixed(2)}</Text>
             </View>
           </View>
 

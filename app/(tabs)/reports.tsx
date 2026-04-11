@@ -107,7 +107,7 @@ export default function ReportsScreen() {
                 const pct = expenses > 0 ? (amt / expenses) * 100 : 0;
                 return (
                   <View key={cat} style={styles.breakdownRow}>
-                    <Text style={styles.breakdownEmoji}>{EXPENSE_CATEGORY_EMOJI[cat as any] ?? '🗂️'}</Text>
+                    <Text style={styles.breakdownEmoji}>{EXPENSE_CATEGORY_EMOJI[cat as import('@/store/useOSStore').ExpenseCategory] ?? '🗂️'}</Text>
                     <View style={{ flex: 1, marginLeft: 10 }}>
                       <View style={styles.breakdownLabelRow}>
                         <Text style={[styles.breakdownCat, { color: theme.textHigh }]}>{cat}</Text>
