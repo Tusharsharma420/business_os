@@ -10,6 +10,8 @@ export interface BusinessIdentity {
   address: string;
   email: string;
   phone: string;
+  currency: string;
+  taxRate: number; // percentage e.g. 18 for 18%
 }
 
 export interface Contact {
@@ -26,6 +28,26 @@ export interface Item {
   category: string;
 }
 
+export type ExpenseCategory =
+  | 'Salaries'
+  | 'Rent'
+  | 'Marketing'
+  | 'Software'
+  | 'Utilities'
+  | 'Travel'
+  | 'Supplies'
+  | 'Other';
+
+export const EXPENSE_CATEGORIES: ExpenseCategory[] = [
+  'Salaries', 'Rent', 'Marketing', 'Software',
+  'Utilities', 'Travel', 'Supplies', 'Other',
+];
+
+export const EXPENSE_CATEGORY_EMOJI: Record<ExpenseCategory, string> = {
+  Salaries: '👥', Rent: '🏢', Marketing: '📣', Software: '💻',
+  Utilities: '⚡', Travel: '✈️', Supplies: '📦', Other: '🗂️',
+};
+
 export interface Transaction {
   id: string;
   date: string;
@@ -35,6 +57,7 @@ export interface Transaction {
   itemId?: string;
   qty?: number;
   note?: string;
+  expenseCategory?: ExpenseCategory; // only for Money Out
 }
 
 interface OSState {
@@ -63,7 +86,7 @@ const SEED_ITEMS: Item[] = [
 ];
 
 const SEED_TRANSACTIONS: Transaction[] = [
-  { id: 'tx1', date: 'Oct 24', type: 'Money Out', amount: 500, contactId: 'c1', note: 'Marketing spend' },
+  { id: 'tx1', date: 'Oct 24', type: 'Money Out', amount: 500, contactId: 'c1', expenseCategory: 'Marketing', note: 'Q4 campaign' },
   { id: 'tx2', date: 'Oct 25', type: 'Money In', amount: 10000, contactId: 'c2', itemId: 'i1', qty: 2, note: 'Design retainer x2' },
 ];
 
@@ -78,6 +101,8 @@ export const useOSStore = create<OSState>()(
         address: '',
         email: '',
         phone: '',
+        currency: '₹',
+        taxRate: 18,
       },
       contacts: SEED_CONTACTS,
       items: SEED_ITEMS,
@@ -117,7 +142,7 @@ export const useOSStore = create<OSState>()(
         })),
     }),
     {
-      name: 'business-os-storage', // AsyncStorage key
+      name: 'business-os-v24',
       storage: createJSONStorage(() => AsyncStorage),
     }
   )

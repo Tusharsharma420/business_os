@@ -4,7 +4,12 @@ import {
   SafeAreaView, TouchableOpacity, ScrollView, Alert,
 } from 'react-native';
 import { Colors, Spacing } from '@/constants/DesignSystem';
-import { useOSStore } from '@/store/useOSStore';
+import {
+  useOSStore,
+  EXPENSE_CATEGORIES,
+  EXPENSE_CATEGORY_EMOJI,
+  type ExpenseCategory,
+} from '@/store/useOSStore';
 import { useRouter } from 'expo-router';
 import { BottomSheet } from '@/components/BottomSheet';
 import { FormInput } from '@/components/FormInput';
@@ -15,7 +20,8 @@ type TxType = 'Money In' | 'Money Out';
 export default function TransactionsScreen() {
   const theme = Colors.light;
   const router = useRouter();
-  const { transactions, contacts, items, addTransaction, deleteTransaction } = useOSStore();
+  const { transactions, contacts, items, addTransaction, deleteTransaction, identity } = useOSStore();
+  const cur = identity.currency;
 
   const [sheetVisible, setSheetVisible] = useState(false);
   const [txType, setTxType] = useState<TxType>('Money In');
@@ -23,6 +29,7 @@ export default function TransactionsScreen() {
   const [note, setNote] = useState('');
   const [contactIdx, setContactIdx] = useState(0);
   const [itemIdx, setItemIdx] = useState(0);
+  const [expenseCat, setExpenseCat] = useState<ExpenseCategory>('Other');
 
   const totalIn = transactions.filter(t => t.type === 'Money In').reduce((s, t) => s + t.amount, 0);
   const totalOut = transactions.filter(t => t.type === 'Money Out').reduce((s, t) => s + t.amount, 0);
@@ -38,6 +45,7 @@ export default function TransactionsScreen() {
       itemId: txType === 'Money In' ? items[itemIdx]?.id : undefined,
       qty: 1,
       note: note.trim() || undefined,
+      expenseCategory: txType === 'Money Out' ? expenseCat : undefined,
     });
     setAmount(''); setNote(''); setSheetVisible(false);
   };
@@ -59,21 +67,23 @@ export default function TransactionsScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Summary pills */}
         <View style={styles.pillRow}>
           <View style={[styles.pill, { backgroundColor: '#E8FAE8' }]}>
             <Text style={[styles.pillLabel, { color: theme.positive }]}>In</Text>
-            <Text style={[styles.pillValue, { color: theme.positive }]}>+${totalIn.toLocaleString()}</Text>
+            <Text style={[styles.pillValue, { color: theme.positive }]}>{cur}{totalIn.toLocaleString()}</Text>
           </View>
           <View style={[styles.pill, { backgroundColor: '#FFF0EB' }]}>
             <Text style={[styles.pillLabel, { color: theme.negative }]}>Out</Text>
-            <Text style={[styles.pillValue, { color: theme.negative }]}>-${totalOut.toLocaleString()}</Text>
+            <Text style={[styles.pillValue, { color: theme.negative }]}>{cur}{totalOut.toLocaleString()}</Text>
           </View>
           <View style={[styles.pill, { backgroundColor: theme.surface }]}>
             <Text style={[styles.pillLabel, { color: theme.textLow }]}>Net</Text>
-            <Text style={[styles.pillValue, { color: theme.textHigh }]}>${(totalIn - totalOut).toLocaleString()}</Text>
+            <Text style={[styles.pillValue, { color: theme.textHigh }]}>{cur}{(totalIn - totalOut).toLocaleString()}</Text>
           </View>
         </View>
 
+        {/* List */}
         <FlatList
           data={transactions}
           keyExtractor={item => item.id}
@@ -83,24 +93,24 @@ export default function TransactionsScreen() {
             const contact = contacts.find(c => c.id === item.contactId);
             const product = items.find(i => i.id === item.itemId);
             const isIn = item.type === 'Money In';
+            const catEmoji = item.expenseCategory ? EXPENSE_CATEGORY_EMOJI[item.expenseCategory] : null;
             return (
-              <TouchableOpacity
-                style={styles.row}
-                onLongPress={() => handleDelete(item.id)}
-                activeOpacity={0.7}
-              >
+              <TouchableOpacity style={styles.row} onLongPress={() => handleDelete(item.id)} activeOpacity={0.7}>
                 <View style={[styles.dot, { backgroundColor: isIn ? theme.positive : theme.negative }]} />
                 <View style={{ flex: 1, marginLeft: Spacing.md }}>
                   <Text style={[styles.rowName, { color: theme.textHigh }]}>
                     {contact?.name ?? 'General Entry'}
                   </Text>
                   <Text style={[styles.rowSub, { color: theme.textLow }]}>
-                    {item.date}{product ? ` · ${product.name}` : ''}{item.note ? ` · ${item.note}` : ''}
+                    {item.date}
+                    {catEmoji ? ` · ${catEmoji} ${item.expenseCategory}` : ''}
+                    {product ? ` · ${product.name}` : ''}
+                    {item.note ? ` · ${item.note}` : ''}
                   </Text>
                 </View>
                 <View style={{ alignItems: 'flex-end' }}>
                   <Text style={[styles.rowAmount, { color: isIn ? theme.positive : theme.negative }]}>
-                    {isIn ? '+' : '-'}${item.amount.toLocaleString()}
+                    {isIn ? '+' : '-'}{cur}{item.amount.toLocaleString()}
                   </Text>
                   {isIn && product && (
                     <TouchableOpacity onPress={() => router.push({ pathname: '/invoice/[txId]', params: { txId: item.id } })}>
@@ -114,8 +124,10 @@ export default function TransactionsScreen() {
         />
       </View>
 
+      {/* Add Sheet */}
       <BottomSheet visible={sheetVisible} onClose={() => setSheetVisible(false)} title="Record Transaction">
         <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          {/* Type Toggle */}
           <View style={styles.toggleRow}>
             {(['Money In', 'Money Out'] as TxType[]).map(t => (
               <TouchableOpacity
@@ -130,11 +142,12 @@ export default function TransactionsScreen() {
             ))}
           </View>
 
-          <FormInput label="Amount" value={amount} onChangeText={setAmount} keyboardType="decimal-pad" placeholder="0.00" />
+          <FormInput label={`Amount (${cur})`} value={amount} onChangeText={setAmount} keyboardType="decimal-pad" placeholder="0.00" />
           <FormInput label="Note (optional)" value={note} onChangeText={setNote} placeholder="e.g. Q1 invoice" />
 
+          {/* Contact Picker */}
           <View style={{ paddingHorizontal: Spacing.lg, marginBottom: Spacing.md }}>
-            <Text style={[styles.pickerLabel, { color: theme.textLow }]}>Contact</Text>
+            <Text style={styles.pickerLabel}>Contact</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {contacts.map((c, idx) => (
                 <TouchableOpacity key={c.id} style={[styles.chip, idx === contactIdx && { backgroundColor: theme.primary }]} onPress={() => setContactIdx(idx)}>
@@ -144,9 +157,10 @@ export default function TransactionsScreen() {
             </ScrollView>
           </View>
 
+          {/* Money In: Item Picker */}
           {txType === 'Money In' && (
             <View style={{ paddingHorizontal: Spacing.lg, marginBottom: Spacing.md }}>
-              <Text style={[styles.pickerLabel, { color: theme.textLow }]}>Item</Text>
+              <Text style={styles.pickerLabel}>Item</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 {items.map((item, idx) => (
                   <TouchableOpacity key={item.id} style={[styles.chip, idx === itemIdx && { backgroundColor: '#333' }]} onPress={() => setItemIdx(idx)}>
@@ -157,7 +171,30 @@ export default function TransactionsScreen() {
             </View>
           )}
 
-          <PrimaryButton label={`Record ${txType}`} onPress={handleAdd} color={txType === 'Money In' ? theme.positive : theme.negative} />
+          {/* Money Out: Expense Category */}
+          {txType === 'Money Out' && (
+            <View style={{ paddingHorizontal: Spacing.lg, marginBottom: Spacing.md }}>
+              <Text style={styles.pickerLabel}>Category</Text>
+              <View style={styles.catGrid}>
+                {EXPENSE_CATEGORIES.map(cat => (
+                  <TouchableOpacity
+                    key={cat}
+                    style={[styles.catBtn, expenseCat === cat && { backgroundColor: theme.negative }]}
+                    onPress={() => setExpenseCat(cat)}
+                  >
+                    <Text style={styles.catEmoji}>{EXPENSE_CATEGORY_EMOJI[cat]}</Text>
+                    <Text style={[styles.catText, { color: expenseCat === cat ? '#FFF' : theme.textLow }]}>{cat}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
+          <PrimaryButton
+            label={`Record ${txType}`}
+            onPress={handleAdd}
+            color={txType === 'Money In' ? theme.positive : theme.negative}
+          />
         </ScrollView>
       </BottomSheet>
     </SafeAreaView>
@@ -184,7 +221,11 @@ const styles = StyleSheet.create({
   toggleRow: { flexDirection: 'row', gap: Spacing.sm, paddingHorizontal: Spacing.lg, marginBottom: Spacing.lg, marginTop: Spacing.sm },
   toggleBtn: { flex: 1, padding: Spacing.md, borderRadius: 12, alignItems: 'center', backgroundColor: '#F2F2F7' },
   toggleText: { fontSize: 14, fontWeight: '700' },
-  pickerLabel: { fontSize: 12, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: Spacing.sm },
+  pickerLabel: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: Spacing.sm, color: '#8E8E93' },
   chip: { paddingHorizontal: Spacing.md, paddingVertical: 8, borderRadius: 20, backgroundColor: '#F2F2F7', marginRight: Spacing.sm },
   chipText: { fontSize: 14, fontWeight: '600' },
+  catGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  catBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, backgroundColor: '#F2F2F7' },
+  catEmoji: { fontSize: 14 },
+  catText: { fontSize: 13, fontWeight: '600' },
 });
