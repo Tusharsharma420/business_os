@@ -1,5 +1,12 @@
 import { create } from 'zustand';
 
+export interface CompanyIdentity {
+  name: string;
+  taxId: string;
+  logoUrl: string;
+  signatureName: string;
+}
+
 export interface Customer {
   id: string;
   name: string;
@@ -20,11 +27,13 @@ export interface Transaction {
   name: string;
   date: string;
   amount: number;
+  customerId?: string; // Relational
+  dealId?: string;     // Relational
 }
 
 export interface Deal {
   id: string;
-  customerId: string; // V1.2 Relational Connection
+  customerId: string; 
   productId: string; 
   value: number;
   stage: 'Lead' | 'Negotiation' | 'Closed';
@@ -38,6 +47,7 @@ export interface Activity {
 }
 
 interface OSState {
+  company: CompanyIdentity;
   cashflow: number;
   customers: Customer[];
   products: Product[];
@@ -46,11 +56,19 @@ interface OSState {
   activityFeed: Activity[];
   
   // Actions
+  updateCompanyIdentity: (company: Partial<CompanyIdentity>) => void;
   addTransaction: (t: Omit<Transaction, 'id'>) => void;
   updateDealStage: (dealId: string, newStage: 'Lead' | 'Negotiation' | 'Closed') => void;
 }
 
 export const useOSStore = create<OSState>((set) => ({
+  company: {
+    name: 'Your Company LLC',
+    taxId: 'US-999-888-777',
+    logoUrl: 'https://cdn-icons-png.flaticon.com/512/8621/8621183.png',
+    signatureName: 'Authorized Representative'
+  },
+  
   cashflow: 124500.00,
   
   customers: [
@@ -83,6 +101,10 @@ export const useOSStore = create<OSState>((set) => ({
     { id: 'a2', title: 'Inventory Warning: HDW-SRV-99 stock low', type: 'negative' },
     { id: 'a3', title: 'System Initialized', type: 'neutral' },
   ],
+
+  updateCompanyIdentity: (config) => set((state) => ({
+    company: { ...state.company, ...config }
+  })),
 
   addTransaction: (tx) => set((state) => ({
     transactions: [{ id: Date.now().toString(), ...tx }, ...state.transactions],
@@ -121,9 +143,10 @@ export const useOSStore = create<OSState>((set) => ({
         name: `Deal Closed: ${customerName}`,
         date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         amount: deal.value,
+        customerId: deal.customerId, // V1.3
+        dealId: deal.id              // V1.3
       });
 
-      // V1.1: Automated Inventory Decrement
       const productIndex = newProducts.findIndex(p => p.id === deal.productId);
       if (productIndex !== -1) {
         newProducts[productIndex] = {
@@ -138,7 +161,6 @@ export const useOSStore = create<OSState>((set) => ({
         };
       }
 
-      // V1.2: Relational LTV Increment
       const customerIndex = newCustomers.findIndex(c => c.id === deal.customerId);
       if (customerIndex !== -1) {
          newCustomers[customerIndex] = {
@@ -159,7 +181,7 @@ export const useOSStore = create<OSState>((set) => ({
       cashflow: newCashflow,
       transactions: newTransactions,
       products: newProducts,
-      customers: newCustomers, // V1.2 persistence
+      customers: newCustomers,
     };
   })
 }));
