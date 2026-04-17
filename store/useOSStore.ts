@@ -2,6 +2,10 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FirebaseService } from '@/lib/firebaseService';
+import { createLogger } from '@/lib/logger';
+import { generateId } from '@/utils/generateId';
+
+const logger = createLogger('useOSStore');
 
 export interface BusinessIdentity {
   name: string;
@@ -47,9 +51,15 @@ export const EXPENSE_CATEGORIES: ExpenseCategory[] = [
   'Utilities', 'Travel', 'Supplies', 'Other',
 ];
 
-export const EXPENSE_CATEGORY_EMOJI: Record<ExpenseCategory, string> = {
-  Salaries: '👥', Rent: '🏢', Marketing: '📣', Software: '💻',
-  Utilities: '⚡', Travel: '✈️', Supplies: '📦', Other: '🗂️',
+export const EXPENSE_CATEGORY_ICON: Record<ExpenseCategory, string> = {
+  Salaries: 'users',
+  Rent: 'building-2',
+  Marketing: 'megaphone',
+  Software: 'cpu',
+  Utilities: 'zap',
+  Travel: 'plane',
+  Supplies: 'package',
+  Other: 'layout-grid',
 };
 
 export interface Transaction {
@@ -134,7 +144,9 @@ export const useOSStore = create<OSState>()(
                 : item
             );
           }
-          const nextTransactions = [{ id: `tx_${Date.now()}`, ...tx }, ...state.transactions];
+          const newTx = { id: generateId('tx'), ...tx };
+          const nextTransactions = [newTx, ...state.transactions];
+          logger.info('add_transaction_success', { input: { id: newTx.id, amount: newTx.amount } });
           if (state.uid) {
             FirebaseService.updateTransaction(state.uid, nextTransactions);
             FirebaseService.updateItems(state.uid, updatedItems);
@@ -148,13 +160,16 @@ export const useOSStore = create<OSState>()(
       deleteTransaction: (id) =>
         set((state) => {
           const next = { transactions: state.transactions.filter((t) => t.id !== id) };
+          logger.info('delete_transaction_success', { input: { id } });
           if (state.uid) FirebaseService.updateTransaction(state.uid, next.transactions);
           return next;
         }),
 
       addContact: (c) =>
         set((state) => {
-          const next = { contacts: [{ id: `c_${Date.now()}`, ...c }, ...state.contacts] };
+          const newContact = { id: generateId('c'), ...c };
+          const next = { contacts: [newContact, ...state.contacts] };
+          logger.info('add_contact_success', { input: { id: newContact.id } });
           if (state.uid) FirebaseService.updateContacts(state.uid, next.contacts);
           return next;
         }),
@@ -162,15 +177,21 @@ export const useOSStore = create<OSState>()(
       deleteContact: (id) =>
         set((state) => {
           const inUse = state.transactions.some((t) => t.contactId === id);
-          if (inUse) throw new Error('Contact in use. Clear transactions first.');
+          if (inUse) {
+            logger.warn('delete_contact_failed', { error: 'Contact in use.', input: { id } });
+            throw new Error('Contact in use. Clear transactions first.');
+          }
           const next = { contacts: state.contacts.filter((c) => c.id !== id) };
+          logger.info('delete_contact_success', { input: { id } });
           if (state.uid) FirebaseService.updateContacts(state.uid, next.contacts);
           return next;
         }),
 
       addItem: (i) =>
         set((state) => {
-          const next = { items: [{ id: `i_${Date.now()}`, ...i, stock: i.stock ?? 0, minStock: i.minStock ?? 0 }, ...state.items] };
+          const newItem = { id: generateId('i'), ...i, stock: i.stock ?? 0, minStock: i.minStock ?? 0 };
+          const next = { items: [newItem, ...state.items] };
+          logger.info('add_item_success', { input: { id: newItem.id } });
           if (state.uid) FirebaseService.updateItems(state.uid, next.items);
           return next;
         }),
@@ -178,6 +199,7 @@ export const useOSStore = create<OSState>()(
       updateItem: (id, updates) =>
         set((state) => {
           const next = { items: state.items.map((i) => (i.id === id ? { ...i, ...updates } : i)) };
+          logger.info('update_item_success', { input: { id, updates } });
           if (state.uid) FirebaseService.updateItems(state.uid, next.items);
           return next;
         }),
@@ -185,8 +207,12 @@ export const useOSStore = create<OSState>()(
       deleteItem: (id) =>
         set((state) => {
           const inUse = state.transactions.some((t) => t.itemId === id);
-          if (inUse) throw new Error('Item in use. Clear transactions first.');
+          if (inUse) {
+             logger.warn('delete_item_failed', { error: 'Item in use.', input: { id } });
+             throw new Error('Item in use. Clear transactions first.');
+          }
           const next = { items: state.items.filter((i) => i.id !== id) };
+          logger.info('delete_item_success', { input: { id } });
           if (state.uid) FirebaseService.updateItems(state.uid, next.items);
           return next;
         }),
@@ -203,6 +229,7 @@ export const useOSStore = create<OSState>()(
             items: cloudData.items || get().items,
             transactions: cloudData.transactions || get().transactions,
           });
+          logger.info('sync_with_cloud', { output: 'Hydrated state from cloud' });
         } else {
           // Cloud empty: Push local migration
           const state = get();
@@ -212,6 +239,7 @@ export const useOSStore = create<OSState>()(
             items: state.items,
             transactions: state.transactions,
           });
+          logger.info('sync_with_cloud', { output: 'Pushed local migration to cloud' });
         }
       },
     }),
