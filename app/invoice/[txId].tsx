@@ -7,6 +7,15 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors, Spacing } from '@/constants/DesignSystem';
 import { useOSStore } from '@/store/useOSStore';
 import { PdfGenerator } from '@/utils/pdfGenerator';
+import { Icon } from '@/components/ui/icon';
+import { 
+  ArrowLeft, 
+  Share2, 
+  FileText, 
+  AlertCircle,
+  CheckCircle2,
+  LucideIcon
+} from 'lucide-react-native';
 
 export default function InvoiceScreen() {
   const { txId } = useLocalSearchParams();
@@ -30,11 +39,14 @@ export default function InvoiceScreen() {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
         <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-          <Text style={{ fontSize: 40 }}>⚠️</Text>
+          <Icon icon={AlertCircle} size={64} color={theme.negative} />
           <Text style={[styles.errorTitle, { color: theme.textHigh }]}>Invoice Not Found</Text>
           <Text style={[styles.errorSub, { color: theme.textLow }]}>Transaction record is missing.</Text>
           <TouchableOpacity onPress={() => router.back()} style={[styles.backPill, { backgroundColor: theme.primary }]}>
-            <Text style={styles.backPillText}>Go Back</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Icon icon={ArrowLeft} size={18} color="#FFF" />
+              <Text style={styles.backPillText}>Go Back</Text>
+            </View>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -64,11 +76,17 @@ export default function InvoiceScreen() {
 
         {/* Top bar */}
         <View style={styles.topBar}>
-          <TouchableOpacity onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: theme.primary }]}>
-            <Text style={styles.backBtnText}>← Back</Text>
+          <TouchableOpacity onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: '#FFF' }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Icon icon={ArrowLeft} size={16} color={theme.textHigh} />
+              <Text style={[styles.backBtnText, { color: theme.textHigh }]}>Back</Text>
+            </View>
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleShare} style={[styles.shareBtn, { backgroundColor: '#333' }]}>
-            <Text style={styles.backBtnText}>Share PDF</Text>
+          <TouchableOpacity onPress={handleShare} style={[styles.shareBtn, { backgroundColor: theme.primary }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Icon icon={Share2} size={16} color="#FFF" />
+              <Text style={styles.shareBtnText}>Share PDF</Text>
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -89,7 +107,10 @@ export default function InvoiceScreen() {
               <Text style={[styles.invoiceNum, { color: theme.textHigh }]}>{invoiceNum}</Text>
               <Text style={[styles.invoiceMeta, { color: theme.textLow }]}>Issued: {issueDate}</Text>
               <View style={[styles.statusBadge, { backgroundColor: '#E8FAE8' }]}>
-                <Text style={[styles.statusText, { color: theme.positive }]}>● Paid</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Icon icon={CheckCircle2} size={12} color={theme.positive} />
+                  <Text style={[styles.statusText, { color: theme.positive }]}>Paid</Text>
+                </View>
               </View>
             </View>
           </View>
@@ -184,14 +205,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
   },
-  backBtn: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
-  shareBtn: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
-  backBtnText: { color: '#FFF', fontWeight: '700', fontSize: 14 },
-  topBarTitle: { fontSize: 14, fontWeight: '600', fontFamily: 'monospace' },
+  backBtn: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
+  shareBtn: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 },
+  backBtnText: { fontWeight: '700', fontSize: 13 },
+  shareBtnText: { color: '#FFF', fontWeight: '700', fontSize: 13 },
   paper: {
     margin: Spacing.md,
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    borderRadius: 24,
     padding: Spacing.xl,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -203,11 +224,11 @@ const styles = StyleSheet.create({
   brandHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: Spacing.lg },
   brandLeft: { flex: 1 },
   brandRight: { alignItems: 'flex-end' },
-  logo: { width: 56, height: 56, borderRadius: 10, marginBottom: 8 },
+  logo: { width: 56, height: 56, borderRadius: 12, marginBottom: 8 },
   companyName: { fontSize: 18, fontWeight: '800', marginBottom: 4 },
   taxId: { fontSize: 12, fontWeight: '500', marginBottom: 2 },
   addr: { fontSize: 12, fontWeight: '400', marginBottom: 2 },
-  invoiceWordmark: { fontSize: 28, fontWeight: '900', letterSpacing: 4, color: '#E0E0E0', marginBottom: 6 },
+  invoiceWordmark: { fontSize: 28, fontWeight: '900', letterSpacing: 4, color: '#F0F0F0', marginBottom: 6 },
   invoiceNum: { fontSize: 15, fontWeight: '700', fontFamily: 'monospace', marginBottom: 4 },
   invoiceMeta: { fontSize: 12, fontWeight: '500', marginBottom: 8 },
   statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
@@ -235,13 +256,13 @@ const styles = StyleSheet.create({
   totalLabel: { fontSize: 18, fontWeight: '700' },
   totalValue: { fontSize: 28, fontWeight: '900' },
   sigRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 50 },
-  sigLine: { width: 160, height: 1, backgroundColor: '#000', marginBottom: 8 },
-  sigName: { fontSize: 15, fontWeight: '600', fontStyle: 'italic', fontFamily: 'serif' },
+  sigLine: { width: 160, height: 1, backgroundColor: '#333', marginBottom: 8 },
+  sigName: { fontSize: 15, fontWeight: '600', fontStyle: 'italic' },
   sigSub: { fontSize: 11, fontWeight: '500', marginTop: 3 },
   footer: { marginTop: Spacing.xl, alignItems: 'center' },
   footerText: { fontSize: 11, fontWeight: '500' },
   errorTitle: { fontSize: 22, fontWeight: '700', marginTop: 16, marginBottom: 8 },
   errorSub: { fontSize: 15, fontWeight: '500', marginBottom: 24 },
-  backPill: { paddingHorizontal: 24, paddingVertical: 12, borderRadius: 20 },
+  backPill: { paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 },
   backPillText: { color: '#FFF', fontWeight: '700', fontSize: 15 },
 });

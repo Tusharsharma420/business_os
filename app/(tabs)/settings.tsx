@@ -2,6 +2,20 @@ import React, { useState } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
 import { Colors, Spacing } from '@/constants/DesignSystem';
 import { useOSStore } from '@/store/useOSStore';
+import { Icon } from '@/components/ui/icon';
+import { 
+  Building2, 
+  MapPin, 
+  Mail, 
+  Phone, 
+  Image as ImageIcon, 
+  FileSignature, 
+  Percent, 
+  Target,
+  CheckCircle2,
+  Save,
+  Fingerprint
+} from 'lucide-react-native';
 
 const CURRENCIES = ['₹', '$', '€', '£', '¥', 'AED'];
 
@@ -32,9 +46,12 @@ export default function SettingsScreen() {
     setTimeout(() => setSaved(false), 2000);
   };
 
-  const Field = ({ label, value, onChange, placeholder, keyboard }: any) => (
+  const Field = ({ label, value, onChange, placeholder, keyboard, icon: FieldIcon }: any) => (
     <View style={styles.formGroup}>
-      <Text style={[styles.label, { color: theme.textLow }]}>{label}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.xs }}>
+        {FieldIcon && <Icon icon={FieldIcon} size={12} color={theme.textLow} style={{ marginRight: 6 }} />}
+        <Text style={[styles.label, { color: theme.textLow }]}>{label}</Text>
+      </View>
       <TextInput
         style={[styles.input, { color: theme.textHigh, backgroundColor: '#F2F2F7' }]}
         value={value}
@@ -50,42 +67,54 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        <Text style={[styles.headerTitle, { color: theme.textHigh }]}>Identity</Text>
-        <Text style={[styles.subtitle, { color: theme.textLow }]}>Applied to all invoices & reports</Text>
-
-        <Field label="Business Name" value={name} onChange={setName} placeholder="Acme Corp" />
-        <Field label="Tax ID / GST / EIN" value={taxId} onChange={setTaxId} placeholder="27AAPFU0939F1ZV" />
-        <Field label="Address" value={address} onChange={setAddress} placeholder="123 Main St, Mumbai" />
-        <Field label="Email" value={email} onChange={setEmail} placeholder="hello@business.com" keyboard="email-address" />
-        <Field label="Phone" value={phone} onChange={setPhone} placeholder="+91 98765 43210" keyboard="phone-pad" />
-        <Field label="Logo URL" value={logoUrl} onChange={setLogoUrl} placeholder="https://..." />
-        <Field label="Digital Signature Name" value={signatureName} onChange={setSignatureName} placeholder="Authorized Signatory" />
-        <Field label="Invoice Tax Rate (%)" value={taxRate} onChange={setTaxRate} placeholder="18" keyboard="decimal-pad" />
-        <Field label="Monthly Revenue Goal" value={monthlyRevenueGoal} onChange={setMonthlyRevenueGoal} placeholder="50000" keyboard="decimal-pad" />
-
-        {/* Currency Selector */}
-        <View style={styles.formGroup}>
-          <Text style={[styles.label, { color: theme.textLow }]}>Currency Symbol</Text>
-          <View style={styles.currencyRow}>
-            {CURRENCIES.map(c => (
-              <TouchableOpacity
-                key={c}
-                style={[styles.currencyBtn, currency === c && { backgroundColor: theme.primary }]}
-                onPress={() => setCurrency(c)}
-              >
-                <Text style={[styles.currencyText, { color: currency === c ? '#FFF' : theme.textHigh }]}>{c}</Text>
-              </TouchableOpacity>
-            ))}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: Spacing.md }}>
+          <View style={[styles.headerIcon, { backgroundColor: theme.primary + '15' }]}>
+            <Icon icon={Building2} size={28} color={theme.primary} />
+          </View>
+          <View>
+            <Text style={[styles.headerTitle, { color: theme.textHigh }]}>Identity</Text>
+            <Text style={[styles.subtitle, { color: theme.textLow }]}>Applied to all invoices & reports</Text>
           </View>
         </View>
 
-        <TouchableOpacity
-          style={[styles.saveBtn, { backgroundColor: saved ? '#34C759' : theme.primary }]}
-          onPress={handleSave}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.saveBtnText}>{saved ? '✓ Saved!' : 'Save Identity'}</Text>
-        </TouchableOpacity>
+        <View style={{ marginTop: Spacing.xl }}>
+          <Field label="Business Name" value={name} onChange={setName} placeholder="Acme Corp" icon={Building2} />
+          <Field label="Tax ID / GST / EIN" value={taxId} onChange={setTaxId} placeholder="27AAPFU0939F1ZV" icon={Fingerprint} />
+          <Field label="Address" value={address} onChange={setAddress} placeholder="123 Main St, Mumbai" icon={MapPin} />
+          <Field label="Email" value={email} onChange={setEmail} placeholder="hello@business.com" keyboard="email-address" icon={Mail} />
+          <Field label="Phone" value={phone} onChange={setPhone} placeholder="+91 98765 43210" keyboard="phone-pad" icon={Phone} />
+          <Field label="Logo URL" value={logoUrl} onChange={setLogoUrl} placeholder="https://..." icon={ImageIcon} />
+          <Field label="Digital Signature Name" value={signatureName} onChange={setSignatureName} placeholder="Authorized Signatory" icon={FileSignature} />
+          <Field label="Invoice Tax Rate (%)" value={taxRate} onChange={setTaxRate} placeholder="18" keyboard="decimal-pad" icon={Percent} />
+          <Field label="Monthly Revenue Goal" value={monthlyRevenueGoal} onChange={setMonthlyRevenueGoal} placeholder="50000" keyboard="decimal-pad" icon={Target} />
+
+          {/* Currency Selector */}
+          <View style={styles.formGroup}>
+            <Text style={[styles.label, { color: theme.textLow, marginBottom: Spacing.sm }]}>Currency Symbol</Text>
+            <View style={styles.currencyRow}>
+              {CURRENCIES.map(c => (
+                <TouchableOpacity
+                  key={c}
+                  style={[styles.currencyBtn, currency === c && { backgroundColor: theme.primary }]}
+                  onPress={() => setCurrency(c)}
+                >
+                  <Text style={[styles.currencyText, { color: currency === c ? '#FFF' : theme.textHigh }]}>{c}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.saveBtn, { backgroundColor: saved ? '#34C759' : theme.primary }]}
+            onPress={handleSave}
+            activeOpacity={0.85}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Icon icon={saved ? CheckCircle2 : Save} size={20} color="#FFF" />
+              <Text style={styles.saveBtnText}>{saved ? 'Saved!' : 'Save Identity'}</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -93,14 +122,16 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: Spacing.lg },
-  headerTitle: { fontSize: 32, fontWeight: '700', letterSpacing: -0.5, marginBottom: Spacing.xs, marginTop: Spacing.md },
-  subtitle: { fontSize: 14, marginBottom: Spacing.xl, fontWeight: '500' },
+  headerIcon: { width: 56, height: 56, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { fontSize: 32, fontWeight: '700', letterSpacing: -0.5 },
+  subtitle: { fontSize: 13, fontWeight: '500' },
   formGroup: { marginBottom: Spacing.lg },
-  label: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: Spacing.xs },
+  label: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
   input: { borderRadius: 12, paddingHorizontal: Spacing.md, paddingVertical: 14, fontSize: 16, fontWeight: '500' },
   currencyRow: { flexDirection: 'row', gap: Spacing.sm, flexWrap: 'wrap' },
-  currencyBtn: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#F2F2F7', alignItems: 'center', justifyContent: 'center' },
-  currencyText: { fontSize: 18, fontWeight: '700' },
+  currencyBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#F2F2F7', alignItems: 'center', justifyContent: 'center' },
+  currencyText: { fontSize: 16, fontWeight: '700' },
   saveBtn: { padding: Spacing.lg, borderRadius: 14, alignItems: 'center', marginTop: Spacing.sm, marginBottom: Spacing.xxl },
   saveBtnText: { color: '#FFF', fontSize: 16, fontWeight: '700' },
 });
+

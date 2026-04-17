@@ -1,36 +1,43 @@
-// Fallback for using MaterialIcons on Android and web.
+// SVG-based IconSymbol using Lucide icons for a premium, consistent look across platforms.
 
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { SymbolWeight, SymbolViewProps } from 'expo-symbols';
-import { ComponentProps } from 'react';
-import { OpaqueColorValue, type StyleProp, type TextStyle } from 'react-native';
-
-type IconMapping = Record<SymbolViewProps['name'], ComponentProps<typeof MaterialIcons>['name']>;
-type IconSymbolName = keyof typeof MAPPING;
+import React from 'react';
+import { 
+  Home, 
+  ArrowLeftRight, 
+  Users, 
+  Package, 
+  BarChart3, 
+  Settings, 
+  Send, 
+  ChevronRight,
+  Code2,
+  LucideIcon
+} from 'lucide-react-native';
+import { type StyleProp, type ViewStyle } from 'react-native';
+import { Icon } from './icon';
 
 /**
- * Add your SF Symbols to Material Icons mappings here.
- * - see Material Icons in the [Icons Directory](https://icons.expo.fyi).
- * - see SF Symbols in the [SF Symbols](https://developer.apple.com/sf-symbols/) app.
+ * Add your SF Symbols to Lucide icon mappings here.
  */
 const MAPPING = {
   // Tabs
-  'house.fill': 'home',
-  'repeat': 'loop',
-  'person.2.fill': 'people',
-  'cube.fill': 'inventory-2',
-  'chart.bar.fill': 'bar-chart',
-  'gearshape.fill': 'settings',
+  'house.fill': Home,
+  'repeat': ArrowLeftRight,
+  'person.2.fill': Users,
+  'cube.fill': Package,
+  'chart.bar.fill': BarChart3,
+  'gearshape.fill': Settings,
   // UI Elements
-  'paperplane.fill': 'send',
-  'chevron.left.forwardslash.chevron.right': 'code',
-  'chevron.right': 'chevron-right',
-} as IconMapping;
+  'paperplane.fill': Send,
+  'chevron.left.forwardslash.chevron.right': Code2,
+  'chevron.right': ChevronRight,
+} as const;
+
+type IconSymbolName = keyof typeof MAPPING;
 
 /**
- * An icon component that uses native SF Symbols on iOS, and Material Icons on Android and web.
- * This ensures a consistent look across platforms, and optimal resource usage.
- * Icon `name`s are based on SF Symbols and require manual mapping to Material Icons.
+ * An icon component that uses Lucide SVG icons across all platforms.
+ * This ensures a premium, high-fidelity look and consistent user experience.
  */
 export function IconSymbol({
   name,
@@ -40,9 +47,10 @@ export function IconSymbol({
 }: {
   name: IconSymbolName;
   size?: number;
-  color: string | OpaqueColorValue;
-  style?: StyleProp<TextStyle>;
-  weight?: SymbolWeight;
+  color: string;
+  style?: StyleProp<ViewStyle>;
 }) {
-  return <MaterialIcons color={color} size={size} name={MAPPING[name]} style={style} />;
+  const IconComponent = MAPPING[name];
+  return <Icon icon={IconComponent} size={size} color={color} style={style} />;
 }
+

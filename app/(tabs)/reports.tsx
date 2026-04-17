@@ -3,8 +3,18 @@ import {
   StyleSheet, View, Text, SafeAreaView, ScrollView, TouchableOpacity,
 } from 'react-native';
 import { Colors, Spacing } from '@/constants/DesignSystem';
-import { useOSStore, EXPENSE_CATEGORIES, EXPENSE_CATEGORY_EMOJI } from '@/store/useOSStore';
+import { useOSStore, EXPENSE_CATEGORIES, EXPENSE_CATEGORY_ICON, type ExpenseCategory } from '@/store/useOSStore';
 import { useRouter } from 'expo-router';
+import { Icon } from '@/components/ui/icon';
+import { getIcon } from '@/utils/icons';
+import { 
+  TrendingUp, 
+  TrendingDown, 
+  ChevronRight, 
+  ArrowRight,
+  Calendar,
+  LayoutGrid
+} from 'lucide-react-native';
 
 type Period = '7D' | '30D' | '90D' | 'ALL';
 const PERIODS: Period[] = ['7D', '30D', '90D', 'ALL'];
@@ -90,14 +100,20 @@ export default function ReportsScreen() {
           {/* Revenue/Expense cards */}
           <View style={styles.metricsRow}>
             <View style={[styles.metricCard, { backgroundColor: '#F0FFF0' }]}>
-              <Text style={[styles.metricLabel, { color: theme.positive }]}>Revenue</Text>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <Text style={[styles.metricLabel, { color: theme.positive }]}>Revenue</Text>
+                <Icon icon={TrendingUp} size={16} color={theme.positive} />
+              </View>
               <Text style={[styles.metricValue, { color: theme.positive }]}>{cur}{revenue.toLocaleString()}</Text>
-              <Text style={[styles.metricSub, { color: theme.textLow }]}>{filtered.filter(t => t.type === 'Money In').length} in</Text>
+              <Text style={[styles.metricSub, { color: theme.textLow }]}>{filtered.filter(t => t.type === 'Money In').length} entries</Text>
             </View>
             <View style={[styles.metricCard, { backgroundColor: '#FFF8F5' }]}>
-              <Text style={[styles.metricLabel, { color: theme.negative }]}>Expenses</Text>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <Text style={[styles.metricLabel, { color: theme.negative }]}>Expenses</Text>
+                <Icon icon={TrendingDown} size={16} color={theme.negative} />
+              </View>
               <Text style={[styles.metricValue, { color: theme.negative }]}>{cur}{expenses.toLocaleString()}</Text>
-              <Text style={[styles.metricSub, { color: theme.textLow }]}>{filtered.filter(t => t.type === 'Money Out').length} out</Text>
+              <Text style={[styles.metricSub, { color: theme.textLow }]}>{filtered.filter(t => t.type === 'Money Out').length} entries</Text>
             </View>
           </View>
 
@@ -107,9 +123,12 @@ export default function ReportsScreen() {
               <Text style={[styles.sectionTitle, { color: theme.textHigh }]}>Expense Breakdown</Text>
               {expenseBreakdown.map(([cat, amt]) => {
                 const pct = expenses > 0 ? (amt / expenses) * 100 : 0;
+                const catIconName = EXPENSE_CATEGORY_ICON[cat as ExpenseCategory] || 'layout-grid';
                 return (
                   <View key={cat} style={styles.breakdownRow}>
-                    <Text style={styles.breakdownEmoji}>{EXPENSE_CATEGORY_EMOJI[cat as import('@/store/useOSStore').ExpenseCategory] ?? '🗂️'}</Text>
+                    <View style={styles.breakdownIcon}>
+                      <Icon icon={getIcon(catIconName)} size={18} color={theme.textLow} />
+                    </View>
                     <View style={{ flex: 1, marginLeft: 10 }}>
                       <View style={styles.breakdownLabelRow}>
                         <Text style={[styles.breakdownCat, { color: theme.textHigh }]}>{cat}</Text>
@@ -155,6 +174,7 @@ export default function ReportsScreen() {
 
           <View style={[styles.summaryBox, { backgroundColor: theme.surface }]}>
             <Text style={[styles.summaryText, { color: theme.textLow }]}>
+              <Icon icon={Calendar} size={14} color={theme.textLow} style={{ marginRight: 6 }} />
               <Text style={{ color: theme.textHigh, fontWeight: '700' }}>{filtered.length}</Text> transactions · {PERIOD_LABEL[period]}
             </Text>
           </View>
@@ -185,7 +205,7 @@ const styles = StyleSheet.create({
   section: { marginBottom: Spacing.lg },
   sectionTitle: { fontSize: 18, fontWeight: '700', marginBottom: Spacing.md },
   breakdownRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10 },
-  breakdownEmoji: { fontSize: 20, width: 30 },
+  breakdownIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#F2F2F7', alignItems: 'center', justifyContent: 'center' },
   breakdownLabelRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
   breakdownCat: { fontSize: 14, fontWeight: '600' },
   breakdownAmt: { fontSize: 14, fontWeight: '700' },
@@ -196,5 +216,6 @@ const styles = StyleSheet.create({
   rankName: { flex: 1, fontSize: 15, fontWeight: '600' },
   rankValue: { fontSize: 15, fontWeight: '800' },
   summaryBox: { padding: Spacing.md, borderRadius: 12, alignItems: 'center' },
-  summaryText: { fontSize: 14, fontWeight: '500' },
+  summaryText: { fontSize: 14, fontWeight: '500', flexDirection: 'row', alignItems: 'center' },
 });
+

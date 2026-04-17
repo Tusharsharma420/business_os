@@ -5,7 +5,18 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors, Spacing } from '@/constants/DesignSystem';
-import { useOSStore, EXPENSE_CATEGORY_EMOJI } from '@/store/useOSStore';
+import { useOSStore } from '@/store/useOSStore';
+import { Icon } from '@/components/ui/icon';
+import { 
+  Search, 
+  User, 
+  Package, 
+  Banknote, 
+  X, 
+  Frown,
+  ArrowUpRight,
+  LucideIcon
+} from 'lucide-react-native';
 
 type ResultType = 'transaction' | 'contact' | 'item';
 interface Result {
@@ -89,10 +100,10 @@ export default function SearchScreen() {
     return out;
   }, [query, transactions, contacts, items]);
 
-  const typeIcon: Record<ResultType, string> = {
-    transaction: '💸',
-    contact: '👤',
-    item: '📦',
+  const typeIcon: Record<ResultType, LucideIcon> = {
+    transaction: Banknote,
+    contact: User,
+    item: Package,
   };
 
   const handlePress = (result: Result) => {
@@ -111,19 +122,19 @@ export default function SearchScreen() {
         {/* Search Bar */}
         <View style={styles.searchBarRow}>
           <View style={[styles.searchBar, { backgroundColor: '#F2F2F7' }]}>
-            <Text style={styles.searchBarIcon}>🔍</Text>
+            <Icon icon={Search} size={18} color={theme.textLow} style={{ marginRight: 8 }} />
             <TextInput
               style={[styles.searchInput, { color: theme.textHigh }]}
               value={query}
               onChangeText={setQuery}
-              placeholder="Search transactions, contacts, items..."
+              placeholder="Search Ledger, Contacts, Items..."
               placeholderTextColor={theme.textLow}
               autoFocus
               returnKeyType="search"
             />
             {query.length > 0 && (
               <TouchableOpacity onPress={() => setQuery('')}>
-                <Text style={[styles.clearBtn, { color: theme.textLow }]}>✕</Text>
+                <Icon icon={X} size={16} color={theme.textLow} />
               </TouchableOpacity>
             )}
           </View>
@@ -135,7 +146,9 @@ export default function SearchScreen() {
         {/* Empty State */}
         {query.length === 0 && (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyEmoji}>🔍</Text>
+            <View style={[styles.emptyIconBox, { backgroundColor: '#F2F2F7' }]}>
+              <Icon icon={Search} size={48} color={theme.textLow} />
+            </View>
             <Text style={[styles.emptyTitle, { color: theme.textHigh }]}>Search Everything</Text>
             <Text style={[styles.emptySub, { color: theme.textLow }]}>Transactions · Contacts · Items</Text>
           </View>
@@ -144,8 +157,11 @@ export default function SearchScreen() {
         {/* No results */}
         {query.length > 0 && results.length === 0 && (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyEmoji}>😶</Text>
+            <View style={[styles.emptyIconBox, { backgroundColor: '#FFF0F0' }]}>
+              <Icon icon={Frown} size={48} color={theme.negative} />
+            </View>
             <Text style={[styles.emptyTitle, { color: theme.textHigh }]}>No results for "{query}"</Text>
+            <Text style={[styles.emptySub, { color: theme.textLow }]}>Try a different keyword</Text>
           </View>
         )}
 
@@ -159,7 +175,7 @@ export default function SearchScreen() {
           renderItem={({ item }) => (
             <TouchableOpacity style={styles.resultRow} onPress={() => handlePress(item)} activeOpacity={0.7}>
               <View style={[styles.resultIcon, { backgroundColor: '#F2F2F7' }]}>
-                <Text style={styles.resultIconText}>{typeIcon[item.type]}</Text>
+                <Icon icon={typeIcon[item.type]} size={20} color={theme.textLow} />
               </View>
               <View style={{ flex: 1, marginLeft: 12 }}>
                 <Text style={[styles.resultTitle, { color: theme.textHigh }]}>{item.title}</Text>
@@ -180,20 +196,18 @@ const styles = StyleSheet.create({
   container: { flex: 1, paddingTop: Spacing.md },
   searchBarRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.lg, marginBottom: Spacing.lg, gap: Spacing.sm },
   searchBar: { flex: 1, flexDirection: 'row', alignItems: 'center', borderRadius: 14, paddingHorizontal: 12, height: 48 },
-  searchBarIcon: { fontSize: 16, marginRight: 8 },
   searchInput: { flex: 1, fontSize: 16, fontWeight: '500' },
-  clearBtn: { fontSize: 14, fontWeight: '600', paddingHorizontal: 4 },
   cancelBtn: { paddingVertical: 8 },
   cancelText: { fontSize: 15, fontWeight: '600' },
   emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: 80 },
-  emptyEmoji: { fontSize: 48, marginBottom: 16 },
+  emptyIconBox: { width: 96, height: 96, borderRadius: 48, alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
   emptyTitle: { fontSize: 20, fontWeight: '700', marginBottom: 6 },
   emptySub: { fontSize: 15, fontWeight: '500' },
   listContainer: { paddingHorizontal: Spacing.lg, paddingBottom: Spacing.xxl },
   resultRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#F5F5F5' },
-  resultIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  resultIconText: { fontSize: 18 },
+  resultIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   resultTitle: { fontSize: 16, fontWeight: '600', marginBottom: 2 },
   resultSub: { fontSize: 13, fontWeight: '500' },
   resultRight: { fontSize: 15, fontWeight: '800', marginLeft: 8 },
 });
+

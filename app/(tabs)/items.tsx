@@ -9,10 +9,26 @@ import { useRouter } from 'expo-router';
 import { BottomSheet } from '@/components/BottomSheet';
 import { FormInput } from '@/components/FormInput';
 import { PrimaryButton } from '@/components/PrimaryButton';
+import { Icon } from '@/components/ui/icon';
+import { 
+  Wrench, 
+  Monitor, 
+  Cpu, 
+  RefreshCw, 
+  Package, 
+  Trash2, 
+  Plus,
+  LayoutGrid,
+  LucideIcon
+} from 'lucide-react-native';
 
 const CATEGORIES = ['Service', 'Hardware', 'Software', 'Subscription', 'Other'];
-const catEmoji: Record<string, string> = {
-  Service: '⚙️', Hardware: '🖥️', Software: '💾', Subscription: '🔄', Other: '📦',
+const catIcon: Record<string, LucideIcon> = {
+  Service: Wrench, 
+  Hardware: Monitor, 
+  Software: Cpu, 
+  Subscription: RefreshCw, 
+  Other: Package,
 };
 
 export default function ItemsScreen() {
@@ -80,7 +96,7 @@ export default function ItemsScreen() {
           renderItem={({ item }) => (
             <View style={styles.row}>
               <View style={styles.iconBox}>
-                <Text style={styles.icon}>{catEmoji[item.category] ?? '📦'}</Text>
+                <Icon icon={catIcon[item.category] || Package} size={20} color={theme.textLow} />
               </View>
               <View style={{ flex: 1, marginLeft: Spacing.md }}>
                 <Text style={[styles.itemName, { color: theme.textHigh }]}>{item.name}</Text>
@@ -100,11 +116,11 @@ export default function ItemsScreen() {
                   style={[styles.itemRecordBtn, { backgroundColor: '#333' }]}
                   onPress={() => router.push({ pathname: '/(tabs)/transactions', params: { add: 'true' } })}
                 >
-                  <Text style={styles.itemRecordText}>+ Record</Text>
+                  <Text style={styles.itemRecordText}>Record Sale</Text>
                 </TouchableOpacity>
               </View>
               <TouchableOpacity onPress={() => handleDelete(item.id, item.name)} style={styles.deleteBtn}>
-                <Text style={{ fontSize: 14 }}>🗑️</Text>
+                <Icon icon={Trash2} size={18} color="#FF3B30" />
               </TouchableOpacity>
             </View>
           )}
@@ -137,14 +153,18 @@ export default function ItemsScreen() {
           
           <View style={{ paddingHorizontal: Spacing.lg, marginBottom: Spacing.md }}>
             <Text style={[styles.pickerLabel, { color: theme.textLow }]}>Category</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {CATEGORIES.map(cat => (
-                <TouchableOpacity key={cat} style={[styles.chip, category === cat && { backgroundColor: '#333' }]} onPress={() => setCategory(cat)}>
-                  <Text style={[styles.chipText, { color: category === cat ? '#FFF' : theme.textHigh }]}>
-                    {catEmoji[cat]} {cat}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 4 }}>
+              {CATEGORIES.map(cat => {
+                const CatIconComp = catIcon[cat] || LayoutGrid;
+                return (
+                  <TouchableOpacity key={cat} style={[styles.chip, category === cat && { backgroundColor: '#333' }]} onPress={() => setCategory(cat)}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Icon icon={CatIconComp} size={14} color={category === cat ? '#FFF' : theme.textHigh} />
+                      <Text style={[styles.chipText, { color: category === cat ? '#FFF' : theme.textHigh }]}>{cat}</Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
           </View>
           <PrimaryButton label="Save Item" onPress={handleAdd} />
@@ -163,7 +183,6 @@ const styles = StyleSheet.create({
   listContainer: { paddingHorizontal: Spacing.lg, paddingBottom: Spacing.xxl },
   row: { flexDirection: 'row', alignItems: 'center', paddingVertical: Spacing.md, borderBottomWidth: 1, borderBottomColor: '#F5F5F5' },
   iconBox: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#F2F2F7', alignItems: 'center', justifyContent: 'center' },
-  icon: { fontSize: 22 },
   itemName: { fontSize: 16, fontWeight: '600', marginBottom: 2 },
   itemCat: { fontSize: 13, fontWeight: '500' },
   stockLabel: { fontSize: 13, fontWeight: '700' },
@@ -175,3 +194,4 @@ const styles = StyleSheet.create({
   chip: { paddingHorizontal: Spacing.md, paddingVertical: 8, borderRadius: 20, backgroundColor: '#F2F2F7', marginRight: Spacing.sm },
   chipText: { fontSize: 14, fontWeight: '600' },
 });
+

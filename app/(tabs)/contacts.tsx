@@ -9,6 +9,15 @@ import { useOSStore, Contact } from '@/store/useOSStore';
 import { BottomSheet } from '@/components/BottomSheet';
 import { FormInput } from '@/components/FormInput';
 import { PrimaryButton } from '@/components/PrimaryButton';
+import { Icon } from '@/components/ui/icon';
+import { 
+  Plus, 
+  User, 
+  Trash2, 
+  ChevronRight, 
+  Users, 
+  CheckCircle2 
+} from 'lucide-react-native';
 
 type ContactType = Contact['type'];
 const CONTACT_TYPES: ContactType[] = ['Customer', 'Vendor', 'Partner', 'Other'];
@@ -57,8 +66,15 @@ export default function ContactsScreen() {
       <View style={styles.container}>
         <View style={styles.headerRow}>
           <Text style={[styles.title, { color: theme.textHigh }]}>Contacts</Text>
-          <TouchableOpacity style={[styles.fab, { backgroundColor: theme.primary }]} onPress={() => setSheetVisible(true)} activeOpacity={0.85}>
-            <Text style={styles.fabText}>+ Add</Text>
+          <TouchableOpacity 
+            style={[styles.fab, { backgroundColor: theme.primary }]} 
+            onPress={() => setSheetVisible(true)} 
+            activeOpacity={0.8}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Icon icon={Plus} size={16} color="#FFF" />
+              <Text style={styles.fabText}>Add</Text>
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -77,7 +93,7 @@ export default function ContactsScreen() {
                 onLongPress={() => handleDelete(item.id, item.name)}
                 activeOpacity={0.7}
               >
-                <View style={[styles.avatar, { backgroundColor: typeColor[item.type] + '20' }]}>
+                <View style={[styles.avatar, { backgroundColor: typeColor[item.type] + '15' }]}>
                   <Text style={[styles.avatarText, { color: typeColor[item.type] }]}>{item.name.charAt(0).toUpperCase()}</Text>
                 </View>
                 <View style={{ flex: 1, marginLeft: Spacing.md }}>
@@ -87,8 +103,11 @@ export default function ContactsScreen() {
                     {totalValue > 0 ? ` · ${cur}${totalValue.toLocaleString()}` : ''}
                   </Text>
                 </View>
-                <View style={[styles.badge, { backgroundColor: typeColor[item.type] + '15' }]}>
-                  <Text style={[styles.badgeText, { color: typeColor[item.type] }]}>{item.type}</Text>
+                <View style={{ alignItems: 'flex-end', gap: 6 }}>
+                  <View style={[styles.badge, { backgroundColor: typeColor[item.type] + '10' }]}>
+                    <Text style={[styles.badgeText, { color: typeColor[item.type] }]}>{item.type}</Text>
+                  </View>
+                  <Icon icon={ChevronRight} size={14} color={theme.textLow} />
                 </View>
               </TouchableOpacity>
             );
@@ -103,7 +122,11 @@ export default function ContactsScreen() {
             <Text style={[styles.pickerLabel, { color: theme.textLow }]}>Type</Text>
             <View style={styles.typeGrid}>
               {CONTACT_TYPES.map(type => (
-                <TouchableOpacity key={type} style={[styles.typeBtn, selectedType === type && { backgroundColor: typeColor[type] }]} onPress={() => setSelectedType(type)}>
+                <TouchableOpacity 
+                  key={type} 
+                  style={[styles.typeBtn, selectedType === type && { backgroundColor: theme.primary }]} 
+                  onPress={() => setSelectedType(type)}
+                >
                   <Text style={[styles.typeBtnText, { color: selectedType === type ? '#FFF' : theme.textLow }]}>{type}</Text>
                 </TouchableOpacity>
               ))}
@@ -120,18 +143,18 @@ const styles = StyleSheet.create({
   container: { flex: 1, paddingTop: Spacing.md },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: Spacing.lg, marginBottom: Spacing.lg, marginTop: Spacing.md },
   title: { fontSize: 32, fontWeight: '700', letterSpacing: -0.5 },
-  fab: { paddingHorizontal: Spacing.md, paddingVertical: 10, borderRadius: 20 },
+  fab: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 },
   fabText: { color: '#FFF', fontWeight: '700', fontSize: 14 },
   listContainer: { paddingHorizontal: Spacing.lg, paddingBottom: Spacing.xxl },
   card: { flexDirection: 'row', alignItems: 'center', paddingVertical: Spacing.md, borderBottomWidth: 1, borderBottomColor: '#F5F5F5' },
-  avatar: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  avatar: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontSize: 18, fontWeight: '800' },
-  cardName: { fontSize: 16, fontWeight: '600', marginBottom: 3 },
+  cardName: { fontSize: 16, fontWeight: '600', marginBottom: 2 },
   cardSub: { fontSize: 13, fontWeight: '500' },
-  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
-  badgeText: { fontSize: 12, fontWeight: '700' },
+  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  badgeText: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
   pickerLabel: { fontSize: 12, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: Spacing.sm },
   typeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
-  typeBtn: { paddingHorizontal: Spacing.md, paddingVertical: 10, borderRadius: 20, backgroundColor: '#F2F2F7' },
+  typeBtn: { paddingHorizontal: Spacing.md, paddingVertical: 10, borderRadius: 12, backgroundColor: '#F2F2F7' },
   typeBtnText: { fontSize: 14, fontWeight: '600' },
 });

@@ -1,79 +1,57 @@
 import React from 'react';
 import { StyleSheet, View, Text, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
 import { Colors, Spacing } from '@/constants/DesignSystem';
-import { useOSStore } from '@/store/useOSStore';
 import { useRouter } from 'expo-router';
+import { Icon } from '@/components/ui/icon';
+import { 
+  Search, AlertTriangle, Users, Factory, Package, Trophy, ArrowRight, TrendingUp, TrendingDown 
+} from 'lucide-react-native';
+import { useDashboardLogic, getTimeOfDay } from '@/hooks/useDashboardLogic';
 
 export default function DashboardScreen() {
   const theme = Colors.light;
   const router = useRouter();
-  const { transactions, contacts, items, identity } = useOSStore();
-  const cur = identity.currency;
-
-  const moneyIn = transactions.filter(t => t.type === 'Money In').reduce((s, t) => s + t.amount, 0);
-  const moneyOut = transactions.filter(t => t.type === 'Money Out').reduce((s, t) => s + t.amount, 0);
-  const net = moneyIn - moneyOut;
-  const isPositive = net >= 0;
-
-  // Recent 3 transactions for activity feed
-  const recent = transactions.slice(0, 4);
-
-  // Top item by frequency
-  const itemFreq: Record<string, number> = {};
-  transactions.filter(t => t.itemId).forEach(t => { itemFreq[t.itemId!] = (itemFreq[t.itemId!] ?? 0) + 1; });
-  const topItemId = Object.entries(itemFreq).sort((a, b) => b[1] - a[1])[0]?.[0];
-  const topItem = items.find(i => i.id === topItemId);
-
-  const customers = contacts.filter(c => c.type === 'Customer').length;
-  const vendors = contacts.filter(c => c.type === 'Vendor').length;
-
-  // Low Stock Items
-  const lowStockItems = items.filter(i => i.stock <= i.minStock);
-
-  // Current Month Revenue
-  const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const monthlyRevenue = transactions
-    .filter(t => t.type === 'Money In' && new Date(t.date) >= monthStart)
-    .reduce((s, t) => s + t.amount, 0);
   
-  const goalProgress = identity.monthlyRevenueGoal > 0 
-    ? Math.min((monthlyRevenue / identity.monthlyRevenueGoal) * 100, 100) 
-    : 0;
+  // Clean injected domain logic
+  const { 
+    identity, cur, moneyIn, moneyOut, net, isPositive, recent, 
+    topItem, customers, vendors, totalItems, lowStockItems, 
+    monthlyRevenue, goalProgress, contacts 
+  } = useDashboardLogic();
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.container}>
 
-        {/* Greeting + Search button */}
+        {/* Header Region */}
         <View style={styles.topRow}>
           <View>
             <Text style={[styles.greeting, { color: theme.textLow }]}>Good {getTimeOfDay()}</Text>
             <Text style={[styles.bizName, { color: theme.textHigh }]} numberOfLines={1}>{identity.name}</Text>
           </View>
-          <TouchableOpacity
-            style={[styles.searchBtn, { backgroundColor: '#F2F2F7' }]}
-            onPress={() => router.push('/search')}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.searchIcon}>🔍</Text>
+          <TouchableOpacity style={[styles.searchBtn, { backgroundColor: '#F2F2F7' }]} onPress={() => router.push('/search')} activeOpacity={0.8}>
+            <Icon icon={Search} size={20} color={theme.textLow} />
           </TouchableOpacity>
         </View>
 
-        {/* Hero Net Cash */}
+        {/* Hero Financial Indicator */}
         <View style={[styles.heroCard, { backgroundColor: isPositive ? '#EFFFEF' : '#FFF0F0' }]}>
           <Text style={[styles.heroLabel, { color: isPositive ? '#1A7A1A' : '#990000' }]}>Net Cash</Text>
-          <Text style={[styles.heroValue, { color: isPositive ? theme.positive : theme.negative }]}>
-            {cur}{net.toLocaleString()}
-          </Text>
+          <Text style={[styles.heroValue, { color: isPositive ? theme.positive : theme.negative }]}>{cur}{net.toLocaleString()}</Text>
           <View style={styles.heroSubRow}>
-            <Text style={[styles.heroSub, { color: theme.positive }]}>↑ {cur}{moneyIn.toLocaleString()}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Icon icon={TrendingUp} size={14} color={theme.positive} style={{ marginRight: 4 }} />
+              <Text style={[styles.heroSub, { color: theme.positive }]}>{cur}{moneyIn.toLocaleString()}</Text>
+            </View>
             <Text style={[styles.heroSubDot, { color: theme.textLow }]}> · </Text>
-            <Text style={[styles.heroSub, { color: theme.negative }]}>↓ {cur}{moneyOut.toLocaleString()}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Icon icon={TrendingDown} size={14} color={theme.negative} style={{ marginRight: 4 }} />
+              <Text style={[styles.heroSub, { color: theme.negative }]}>{cur}{moneyOut.toLocaleString()}</Text>
+            </View>
           </View>
         </View>
 
-        {/* Monthly Goal Progress */}
+        {/* Goals & KPI Component */}
         <View style={styles.goalCard}>
           <View style={styles.goalHeader}>
             <Text style={styles.goalLabel}>Monthly Goal</Text>
@@ -82,62 +60,51 @@ export default function DashboardScreen() {
           <View style={styles.goalTrack}>
             <View style={[styles.goalFill, { width: `${goalProgress}%`, backgroundColor: theme.primary }]} />
           </View>
-          <Text style={styles.goalSub}>
-            {cur}{monthlyRevenue.toLocaleString()} of {cur}{identity.monthlyRevenueGoal.toLocaleString()}
-          </Text>
+          <Text style={styles.goalSub}>{cur}{monthlyRevenue.toLocaleString()} of {cur}{identity.monthlyRevenueGoal.toLocaleString()}</Text>
         </View>
 
-        {/* Low Stock Alert */}
+        {/* Automated System Alerts */}
         {lowStockItems.length > 0 && (
-          <TouchableOpacity 
-            style={[styles.alertCard, { borderColor: theme.negative }]} 
-            onPress={() => router.push('/(tabs)/items')}
-          >
-            <Text style={styles.alertEmoji}>⚠️</Text>
-            <Text style={styles.alertText}>
-              <Text style={{ fontWeight: '800' }}>{lowStockItems.length}</Text> items are low on stock
-            </Text>
+          <TouchableOpacity style={[styles.alertCard, { borderColor: theme.negative }]} onPress={() => router.push('/(tabs)/items')}>
+            <Icon icon={AlertTriangle} size={18} color={theme.negative} style={{ marginRight: 10 }} />
+            <Text style={styles.alertText}><Text style={{ fontWeight: '800' }}>{lowStockItems.length}</Text> items are low on stock</Text>
           </TouchableOpacity>
         )}
 
-        {/* Quick Stats Row */}
         <View style={styles.statsRow}>
-          <TouchableOpacity style={[styles.statCard, { backgroundColor: '#F8F8FF' }]} onPress={() => router.push('/(tabs)/contacts')} activeOpacity={0.8}>
-            <Text style={styles.statEmoji}>👥</Text>
+          <TouchableOpacity style={[styles.statCard, { backgroundColor: '#F8F8FF' }]} onPress={() => router.push('/(tabs)/contacts')}>
+            <Icon icon={Users} size={20} color="#007AFF" style={{ marginBottom: 6 }} />
             <Text style={[styles.statValue, { color: theme.textHigh }]}>{customers}</Text>
             <Text style={[styles.statLabel, { color: theme.textLow }]}>Customers</Text>
-            <Text style={[styles.statSeeAll, { color: theme.primary }]}>See all →</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.statCard, { backgroundColor: '#FFF8F0' }]} onPress={() => router.push('/(tabs)/contacts')} activeOpacity={0.8}>
-            <Text style={styles.statEmoji}>🏭</Text>
+          <TouchableOpacity style={[styles.statCard, { backgroundColor: '#FFF8F0' }]} onPress={() => router.push('/(tabs)/contacts')}>
+            <Icon icon={Factory} size={20} color="#FF9500" style={{ marginBottom: 6 }} />
             <Text style={[styles.statValue, { color: theme.textHigh }]}>{vendors}</Text>
             <Text style={[styles.statLabel, { color: theme.textLow }]}>Vendors</Text>
-            <Text style={[styles.statSeeAll, { color: theme.primary }]}>See all →</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.statCard, { backgroundColor: '#F0FFF8' }]} onPress={() => router.push('/(tabs)/items')} activeOpacity={0.8}>
-            <Text style={styles.statEmoji}>📦</Text>
-            <Text style={[styles.statValue, { color: theme.textHigh }]}>{items.length}</Text>
+          <TouchableOpacity style={[styles.statCard, { backgroundColor: '#F0FFF8' }]} onPress={() => router.push('/(tabs)/items')}>
+            <Icon icon={Package} size={20} color="#34C759" style={{ marginBottom: 6 }} />
+            <Text style={[styles.statValue, { color: theme.textHigh }]}>{totalItems}</Text>
             <Text style={[styles.statLabel, { color: theme.textLow }]}>Items</Text>
-            <Text style={[styles.statSeeAll, { color: theme.primary }]}>See all →</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Top item insight */}
         {topItem && (
           <View style={[styles.insightCard, { backgroundColor: '#F0F4FF' }]}>
             <Text style={[styles.insightText, { color: '#1A3A99' }]}>
-              🏆  Best seller: <Text style={{ fontWeight: '800' }}>{topItem.name}</Text>
+              <Icon icon={Trophy} size={16} color="#1A3A99" style={{ marginRight: 8 }} /> Best seller: <Text style={{ fontWeight: '800' }}>{topItem.name}</Text>
             </Text>
           </View>
         )}
 
-        {/* Recent Activity */}
+        {/* Reduced Timeline Generator */}
         {recent.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={[styles.sectionTitle, { color: theme.textHigh }]}>Recent</Text>
-              <TouchableOpacity onPress={() => router.push('/(tabs)/transactions')}>
-                <Text style={[styles.seeAll, { color: theme.primary }]}>See all →</Text>
+              <TouchableOpacity onPress={() => router.push('/(tabs)/transactions')} style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={[styles.seeAll, { color: theme.primary }]}>See all</Text>
+                <Icon icon={ArrowRight} size={14} color={theme.primary} style={{ marginLeft: 4 }} />
               </TouchableOpacity>
             </View>
             {recent.map(tx => {
@@ -148,29 +115,21 @@ export default function DashboardScreen() {
                   <View style={[styles.activityDot, { backgroundColor: isIn ? theme.positive : theme.negative }]} />
                   <View style={{ flex: 1, marginLeft: 12 }}>
                     <Text style={[styles.activityName, { color: theme.textHigh }]}>{contact?.name ?? 'Entry'}</Text>
-                    <Text style={[styles.activityDate, { color: theme.textLow }]}>
-                      {new Date(tx.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    </Text>
+                    <Text style={[styles.activityDate, { color: theme.textLow }]}>{new Date(tx.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</Text>
                   </View>
-                  <Text style={[styles.activityAmt, { color: isIn ? theme.positive : theme.negative }]}>
-                    {isIn ? '+' : '-'}{cur}{tx.amount.toLocaleString()}
-                  </Text>
+                  <Text style={[styles.activityAmt, { color: isIn ? theme.positive : theme.negative }]}>{isIn ? '+' : '-'}{cur}{tx.amount.toLocaleString()}</Text>
                 </View>
               );
             })}
           </View>
         )}
 
-        {/* Quick Actions */}
         <View style={styles.actionsRow}>
           <TouchableOpacity style={[styles.actionBtn, { backgroundColor: theme.positive }]} onPress={() => router.push('/(tabs)/transactions')} activeOpacity={0.85}>
-            <Text style={styles.actionText}>+ Record</Text>
+            <Text style={styles.actionText}>Record Transaction</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#007AFF' }]} onPress={() => router.push('/(tabs)/contacts')} activeOpacity={0.85}>
-            <Text style={styles.actionText}>+ Contact</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#333' }]} onPress={() => router.push('/(tabs)/reports')} activeOpacity={0.85}>
-            <Text style={styles.actionText}>Reports →</Text>
+            <Text style={styles.actionText}>Add Contact</Text>
           </TouchableOpacity>
         </View>
 
@@ -179,20 +138,12 @@ export default function DashboardScreen() {
   );
 }
 
-function getTimeOfDay() {
-  const h = new Date().getHours();
-  if (h < 12) return 'morning';
-  if (h < 17) return 'afternoon';
-  return 'evening';
-}
-
 const styles = StyleSheet.create({
   container: { padding: Spacing.lg, paddingTop: 48, paddingBottom: Spacing.xxl },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.lg },
   greeting: { fontSize: 13, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
   bizName: { fontSize: 22, fontWeight: '800', marginTop: 2 },
   searchBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
-  searchIcon: { fontSize: 18 },
   heroCard: { borderRadius: 20, padding: Spacing.xl, marginBottom: Spacing.md },
   heroLabel: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 },
   heroValue: { fontSize: 48, fontWeight: '800', letterSpacing: -2, marginBottom: 8 },
@@ -207,16 +158,13 @@ const styles = StyleSheet.create({
   goalFill: { height: '100%', borderRadius: 3 },
   goalSub: { fontSize: 12, fontWeight: '500', color: '#666' },
   alertCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF0F0', padding: 12, borderRadius: 12, marginBottom: Spacing.md, borderLeftWidth: 4 },
-  alertEmoji: { fontSize: 18, marginRight: 10 },
   alertText: { fontSize: 14, fontWeight: '500', color: '#990000' },
   statsRow: { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.md },
   statCard: { flex: 1, padding: Spacing.md, borderRadius: 16, alignItems: 'center' },
-  statEmoji: { fontSize: 20, marginBottom: 4 },
   statValue: { fontSize: 22, fontWeight: '800' },
   statLabel: { fontSize: 11, fontWeight: '600', marginTop: 2 },
-  statSeeAll: { fontSize: 10, fontWeight: '700', marginTop: 4, textTransform: 'uppercase' },
   insightCard: { padding: Spacing.md, borderRadius: 16, marginBottom: Spacing.md },
-  insightText: { fontSize: 15, fontWeight: '500' },
+  insightText: { fontSize: 15, fontWeight: '500', flexDirection: 'row', alignItems: 'center' },
   section: { marginBottom: Spacing.lg },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.md },
   sectionTitle: { fontSize: 18, fontWeight: '700' },

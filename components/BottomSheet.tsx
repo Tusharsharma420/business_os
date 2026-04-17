@@ -15,6 +15,9 @@ import { Colors, Spacing } from '@/constants/DesignSystem';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
+import { Icon } from '@/components/ui/icon';
+import { X } from 'lucide-react-native';
+
 interface BottomSheetProps {
   visible: boolean;
   onClose: () => void;
@@ -81,10 +84,11 @@ export function BottomSheet({ visible, onClose, title, children }: BottomSheetPr
           {/* Header */}
           <View style={styles.header}>
             <Text style={[styles.title, { color: theme.textHigh }]}>{title}</Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Text style={[styles.closeText, { color: theme.textLow }]}>✕</Text>
+            <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}>
+              <Icon icon={X} size={18} color={theme.textLow} />
             </TouchableOpacity>
           </View>
+
 
           {children}
         </Animated.View>
