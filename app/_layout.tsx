@@ -18,11 +18,16 @@ export default function RootLayout() {
 
   useEffect(() => {
     const initApp = async () => {
-      // For local backend, we use a fixed local-user ID or generate one
-      if (syncWithCloud) {
-        await syncWithCloud('local-user');
+      try {
+        // For local backend, we use a fixed local-user ID or generate one
+        if (syncWithCloud) {
+          await syncWithCloud('local-user');
+        }
+      } catch (e) {
+        console.error("Initialization Sync Error", e);
+      } finally {
+        setIsReady(true);
       }
-      setIsReady(true);
     };
 
     initApp();
