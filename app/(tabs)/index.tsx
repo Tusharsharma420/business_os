@@ -153,7 +153,7 @@ export default function FeedScreen() {
       {/* Global Magic FAB Implementation in tab screen */}
       <TouchableOpacity 
         style={styles.magicFab} 
-        onPress={() => router.push('/(tabs)/transactions')}
+        onPress={() => router.push({ pathname: '/transactions', params: { add: 'true' } })}
         activeOpacity={0.9}
       >
         <Plus color="#fff" size={32} />
