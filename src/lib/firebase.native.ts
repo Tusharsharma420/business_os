@@ -1,15 +1,10 @@
 import { initializeApp } from 'firebase/app';
-// @ts-ignore
-import { 
-  getAuth, 
-  initializeAuth, 
-  getReactNativePersistence 
-} from 'firebase/auth';
+// @ts-ignore: Known issue with Firebase v12 typings
+import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // REPLACE THESE WITH YOUR FIREBASE PROJECT KEYS
-// Found in Firebase Console -> Project Settings -> General -> Your Apps
 export const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
@@ -21,7 +16,7 @@ export const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// Initialize Auth with AsyncStorage persistence for React Native
+// Initialize Auth specifically for React Native persistence
 const auth = initializeAuth(app, {
   persistence: getReactNativePersistence(AsyncStorage)
 });
