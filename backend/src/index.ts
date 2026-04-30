@@ -11,6 +11,10 @@ app.use(express.json());
 // Helper for generating IDs
 const generateId = () => Math.random().toString(36).substring(2, 15);
 
+app.get("/", (req, res) => {
+  res.json({ message: "🚀 Business OS Backend is live!", status: "healthy" });
+});
+
 // ==========================================
 // 1. PEOPLE ENGINE (Contacts)
 // ==========================================
