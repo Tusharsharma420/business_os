@@ -1,5 +1,5 @@
 import { StateCreator } from 'zustand';
-import { FirebaseService } from '@/lib/firebaseService';
+import { ApiService } from '@/lib/apiService';
 import { generateId } from '@/utils/generateId';
 import { createLogger } from '@/lib/logger';
 import type { OSState } from '../useOSStore';
@@ -80,8 +80,8 @@ export const createTransactionSlice: StateCreator<
       logger.info('add_transaction_success', { input: { id: newTx.id, amount: newTx.amount } });
       
       if (state.uid) {
-        FirebaseService.updateTransaction(state.uid, nextTransactions);
-        FirebaseService.updateItems(state.uid, updatedItems);
+        ApiService.addTransaction(newTx);
+        ApiService.updateItems(state.uid, updatedItems);
       }
       
       return {
@@ -95,7 +95,7 @@ export const createTransactionSlice: StateCreator<
       const next = { transactions: state.transactions.filter((t) => t.id !== id) };
       logger.info('delete_transaction_success', { input: { id } });
       if (state.uid) {
-        FirebaseService.updateTransaction(state.uid, next.transactions);
+        ApiService.updateTransaction(state.uid, next.transactions);
       }
       return next;
     }),

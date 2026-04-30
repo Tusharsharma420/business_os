@@ -1,5 +1,5 @@
 import { StateCreator } from 'zustand';
-import { FirebaseService } from '@/lib/firebaseService';
+import { ApiService } from '@/lib/apiService';
 import { generateId } from '@/utils/generateId';
 import { createLogger } from '@/lib/logger';
 import type { OSState } from '../useOSStore';
@@ -40,7 +40,7 @@ export const createItemSlice: StateCreator<
       const newItem = { id: generateId('i'), ...i, stock: i.stock ?? 0, minStock: i.minStock ?? 0 };
       const next = { items: [newItem, ...state.items] };
       logger.info('add_item_success', { input: { id: newItem.id } });
-      if (state.uid) FirebaseService.updateItems(state.uid, next.items);
+      if (state.uid) ApiService.addItem(newItem);
       return next;
     }),
 

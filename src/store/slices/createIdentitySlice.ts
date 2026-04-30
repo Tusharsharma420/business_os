@@ -1,5 +1,5 @@
 import { StateCreator } from 'zustand';
-import { FirebaseService } from '@/lib/firebaseService';
+import { ApiService } from '@/lib/apiService';
 
 export interface BusinessIdentity {
   name: string;
@@ -40,7 +40,7 @@ export const createIdentitySlice: StateCreator<
   updateIdentity: (config) =>
     set((state) => {
       const next = { identity: { ...state.identity, ...config } };
-      if (state.uid) FirebaseService.updateIdentity(state.uid, next.identity);
+      if (state.uid) ApiService.updateIdentity(state.uid, next.identity);
       return next;
     }),
 });

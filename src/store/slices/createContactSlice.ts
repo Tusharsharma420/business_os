@@ -1,5 +1,5 @@
 import { StateCreator } from 'zustand';
-import { FirebaseService } from '@/lib/firebaseService';
+import { ApiService } from '@/lib/apiService';
 import { generateId } from '@/utils/generateId';
 import { createLogger } from '@/lib/logger';
 import type { OSState } from '../useOSStore';
@@ -37,7 +37,7 @@ export const createContactSlice: StateCreator<
       const newContact = { id: generateId('c'), ...c };
       const next = { contacts: [newContact, ...state.contacts] };
       logger.info('add_contact_success', { input: { id: newContact.id } });
-      if (state.uid) FirebaseService.updateContacts(state.uid, next.contacts);
+      if (state.uid) ApiService.addContact(newContact);
       return next;
     }),
 

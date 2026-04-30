@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { FirebaseService } from '@/lib/firebaseService';
+import { ApiService } from '@/lib/apiService';
 import { createLogger } from '@/lib/logger';
 
 import { createIdentitySlice, IdentitySlice } from './slices/createIdentitySlice';
@@ -34,7 +34,7 @@ export const useOSStore = create<OSState>()(
       syncWithCloud: async (uid) => {
         const [set, get] = a;
         set({ uid });
-        const cloudData = await FirebaseService.fetchUserData(uid);
+        const cloudData = await ApiService.fetchUserData(uid);
         
         if (cloudData) {
           // Cloud exists: Hydrate state (Merging strategy: Cloud wins)
@@ -48,7 +48,7 @@ export const useOSStore = create<OSState>()(
         } else {
           // Cloud empty: Push local migration
           const state = get();
-          await FirebaseService.saveFullSync(uid, {
+          await ApiService.saveFullSync(uid, {
             identity: state.identity,
             contacts: state.contacts,
             items: state.items,

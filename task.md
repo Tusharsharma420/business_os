@@ -1,7 +1,7 @@
-# Task Tracker
+# Task Tracker: Frontend Migration to Custom Backend
 
-- [x] Initialize `backend` directory and Node.js project.
-- [x] Install TypeScript, Express, Drizzle ORM, and SQLite.
-- [x] Define the Database Schema (`Contacts`, `Items`, `Transactions`).
-- [x] Build the API Endpoints (Money Engine, People Engine, Product Engine).
-- [x] Test the APIs locally.
+- [x] Analyze frontend codebase for Firebase usage.
+- [x] Create API utility (`src/utils/api.ts`) for custom backend communication.
+- [x] Refactor stores/hooks to replace Firebase with custom API.
+- [x] Remove Firebase dependencies from frontend `package.json`.
+- [ ] Stage, Commit, and Push changes to GitHub.
