@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
-import { Card } from '@/components/Card';
+import { AppleCard } from '@/components/AppleCard';
 import { TrendingUp, TrendingDown, Wallet, ListChecks } from 'lucide-react-native';
 import { ApiService } from '@/lib/apiService';
 import { createLogger } from '@/lib/logger';
