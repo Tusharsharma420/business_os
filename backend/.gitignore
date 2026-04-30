@@ -1,0 +1,5 @@
+node_modules/
+dist/
+business_os.db
+business_os.db-journal
+.env
