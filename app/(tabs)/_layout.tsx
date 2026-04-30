@@ -35,21 +35,14 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: 'Feed',
           tabBarIcon: ({ color }) => <Icon icon={House} size={22} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="transactions"
-        options={{
-          title: 'Ledger',
-          tabBarIcon: ({ color }) => <Icon icon={History} size={22} color={color} />,
         }}
       />
       <Tabs.Screen
         name="contacts"
         options={{
-          title: 'Contacts',
+          title: 'People',
           tabBarIcon: ({ color }) => <Icon icon={Users} size={22} color={color} />,
         }}
       />
@@ -61,19 +54,14 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="analytics"
-        options={{
-          title: 'Insights',
-          tabBarIcon: ({ color }) => <Icon icon={BarChart3} size={22} color={color} />,
-        }}
-      />
-      <Tabs.Screen
         name="settings"
         options={{
           title: 'Identity',
           tabBarIcon: ({ color }) => <Icon icon={Settings} size={22} color={color} />,
         }}
       />
+      <Tabs.Screen name="transactions" options={{ href: null }} />
+      <Tabs.Screen name="analytics" options={{ href: null }} />
     </Tabs>
   );
 }
