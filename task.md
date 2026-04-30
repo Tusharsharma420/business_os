@@ -24,7 +24,8 @@
   - [x] Setup SQLite database with Drizzle.
   - [x] Implement `/signup` and `/login` with Bcrypt and JWT.
   - [x] Verify persistence with centralized `business_os.db`.
-- [ ] **Task 2.2: Mobile Core Integration**
+- [x] **Task 2.2: Mobile Core Integration**
   - [x] Setup API Service Layer in Expo.
   - [x] Implement Auth State Management (Zustand).
-  - [ ] Create Login/Signup UI.
+  - [x] Create Login/Signup UI with "Apple-clean" design.
+  - [x] Implement protected routing and redirection logic.

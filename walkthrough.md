@@ -11,3 +11,4 @@
 - **Action**: Pivoted to **SQLite** (via LibSQL) for zero-config local development and stability.
 - **Action**: Verified full Auth cycle (Signup/Login) with persistent DB storage.
 - **Action**: Initialized Mobile Service layer and Zustand state management.
+- **Action**: Implemented premium "Apple-clean" Login/Signup screens and protected routing logic.

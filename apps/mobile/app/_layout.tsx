@@ -6,7 +6,9 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 
+import { View, ActivityIndicator } from 'react-native';
 import { useColorScheme } from '@/components/useColorScheme';
+import { Theme } from '../constants/Theme.js';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -45,12 +47,29 @@ export default function RootLayout() {
   return <RootLayoutNav />;
 }
 
+import { useAuth } from '../src/store/useAuth.js';
+
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  const { isAuthenticated, isLoading, checkAuth } = useAuth();
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color={Theme.colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
+        <Stack.Screen name="auth/login" options={{ headerShown: false }} />
+        <Stack.Screen name="auth/signup" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
       </Stack>
