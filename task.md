@@ -15,11 +15,16 @@
   - [x] Create `.github/workflows/ci.yml` for automated testing and linting.
 
 ## 🔑 Security & Architecture
-- [ ] **Task 1.5: Security Blueprint**
-  - [ ] Document Auth flow (JWT + Refresh Tokens).
-  - [ ] Document RBAC schema.
+- [x] **Task 1.5: Security Blueprint**
+  - [x] Document Auth flow (JWT + Refresh Tokens).
+  - [x] Document RBAC schema.
 
-## 📊 Status Tracking
-- **Current Sprint**: Foundation -> Identity & Database Schema
-- **Health**: 🟢 Healthy
-- **Blockers**: `backend` directory lock (archived as best as possible)
+## 🏃 Phase 2: Core Ledger & Identity
+- [x] **Task 2.1: Identity API Implementation**
+  - [x] Setup SQLite database with Drizzle.
+  - [x] Implement `/signup` and `/login` with Bcrypt and JWT.
+  - [x] Verify persistence with centralized `business_os.db`.
+- [ ] **Task 2.2: Mobile Core Integration**
+  - [x] Setup API Service Layer in Expo.
+  - [x] Implement Auth State Management (Zustand).
+  - [ ] Create Login/Signup UI.

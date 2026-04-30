@@ -8,3 +8,6 @@
 - **Action**: Configured Docker Compose for local infrastructure.
 - **Decision**: Chose **Fastify** for the backend due to its speed and native JSON Schema support, aligning with the "operational velocity" principle.
 - **Decision**: Chose **PostgreSQL** for the database to ensure relational integrity, critical for accounting.
+- **Action**: Pivoted to **SQLite** (via LibSQL) for zero-config local development and stability.
+- **Action**: Verified full Auth cycle (Signup/Login) with persistent DB storage.
+- **Action**: Initialized Mobile Service layer and Zustand state management.

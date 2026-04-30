@@ -1,44 +1,45 @@
-import { pgTable, uuid, text, timestamp, decimal, pgEnum } from 'drizzle-orm/pg-core';
+import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
 
-export const entityTypeEnum = pgEnum('entity_type', ['CLIENT', 'VENDOR', 'INTERNAL']);
-export const transactionStatusEnum = pgEnum('transaction_status', ['PENDING', 'COMPLETED', 'CANCELLED']);
-export const catalogItemTypeEnum = pgEnum('catalog_item_type', ['PRODUCT', 'SERVICE']);
-
-export const entities = pgTable('entities', {
-  id: uuid('id').primaryKey().defaultRandom(),
+// Entities (People/Firms)
+export const entities = sqliteTable('entities', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
   name: text('name').notNull(),
-  type: entityTypeEnum('type').notNull(),
-  email: text('email'),
+  type: text('type', { enum: ['CLIENT', 'VENDOR', 'INTERNAL'] }).notNull(),
+  email: text('email').unique(),
+  password: text('password'), // Hashed password for users
+  role: text('role', { enum: ['OWNER', 'ADMIN', 'STAFF'] }).default('STAFF'),
   phone: text('phone'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
 
-export const catalogItems = pgTable('catalog_items', {
-  id: uuid('id').primaryKey().defaultRandom(),
+// Catalog (Inventory/Services)
+export const catalogItems = sqliteTable('catalog_items', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
   name: text('name').notNull(),
-  price: decimal('price', { precision: 12, scale: 2 }).notNull(),
-  type: catalogItemTypeEnum('type').notNull(),
-  stockCount: text('stock_count'), // String to handle large numbers if needed, or int
-  createdAt: timestamp('created_at').defaultNow().notNull(),
+  price: real('price').notNull(),
+  type: text('type', { enum: ['PRODUCT', 'SERVICE'] }).notNull(),
+  stockCount: real('stock_count').default(0),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
 
-export const transactions = pgTable('transactions', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  entityId: uuid('entity_id').references(() => entities.id).notNull(),
-  amount: decimal('amount', { precision: 12, scale: 2 }).notNull(),
+// Transactions (The Ledger)
+export const transactions = sqliteTable('transactions', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  entityId: text('entity_id').references(() => entities.id).notNull(),
+  amount: real('amount').notNull(),
   currency: text('currency').default('USD').notNull(),
   description: text('description'),
-  status: transactionStatusEnum('status').default('PENDING').notNull(),
-  date: timestamp('date').defaultNow().notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
+  status: text('status', { enum: ['PENDING', 'COMPLETED', 'CANCELLED'] }).default('PENDING').notNull(),
+  date: integer('date', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
 
-// Transaction Line Items (linking catalog to transactions)
-export const transactionItems = pgTable('transaction_items', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  transactionId: uuid('transaction_id').references(() => transactions.id).notNull(),
-  catalogItemId: uuid('catalog_item_id').references(() => catalogItems.id).notNull(),
-  quantity: decimal('quantity', { precision: 12, scale: 2 }).notNull(),
-  priceAtTime: decimal('price_at_time', { precision: 12, scale: 2 }).notNull(),
+// Transaction Items
+export const transactionItems = sqliteTable('transaction_items', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  transactionId: text('transaction_id').references(() => transactions.id).notNull(),
+  catalogItemId: text('catalog_item_id').references(() => catalogItems.id).notNull(),
+  quantity: real('quantity').notNull(),
+  priceAtTime: real('price_at_time').notNull(),
 });

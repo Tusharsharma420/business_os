@@ -1,10 +1,11 @@
 import { defineConfig } from 'drizzle-kit';
+import path from 'path';
 
 export default defineConfig({
   schema: './src/schema.ts',
   out: './drizzle',
-  dialect: 'postgresql',
+  dialect: 'sqlite',
   dbCredentials: {
-    url: process.env.DATABASE_URL || 'postgresql://admin:password@localhost:5432/business_os',
+    url: `file:${path.resolve(process.cwd(), '../../business_os.db')}`,
   },
 });
