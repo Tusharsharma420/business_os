@@ -61,9 +61,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="reports"
+        name="analytics"
         options={{
-          title: 'Stats',
+          title: 'Insights',
           tabBarIcon: ({ color }) => <Icon icon={BarChart3} size={22} color={color} />,
         }}
       />

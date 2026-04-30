@@ -142,6 +142,29 @@ app.put("/api/items/:id", async (req, res) => {
   res.json(updated[0]);
 });
 
+// ==========================================
+// 5. ANALYTICS ENGINE
+// ==========================================
+
+app.get("/api/analytics/summary", async (req, res) => {
+  try {
+    const txs = await db.select().from(transactions);
+    const summary = txs.reduce((acc, tx) => {
+      if (tx.type === "IN") acc.totalIn += tx.amount;
+      if (tx.type === "OUT") acc.totalOut += tx.amount;
+      return acc;
+    }, { totalIn: 0, totalOut: 0 });
+
+    res.json({
+      ...summary,
+      balance: summary.totalIn - summary.totalOut,
+      transactionCount: txs.length
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 const PUBLIC_IP = process.env.PUBLIC_IP || 'localhost';
