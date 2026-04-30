@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
 import { Colors, Spacing } from '@/constants/DesignSystem';
+import { AppleDesign } from '@/constants/AppleDesign';
 import { useOSStore } from '@/store/useOSStore';
+import { AppleCard } from '@/components/AppleCard';
 import { Icon } from '@/components/ui/icon';
 import { 
   Building2, 
