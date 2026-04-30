@@ -1,9 +1,11 @@
 import express from "express";
 import cors from "cors";
+import dotenv from "dotenv";
 import { db } from "./db/db";
 import { contacts, items, transactions, business_identity } from "./db/schema";
 import { eq } from "drizzle-orm";
 
+dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -141,6 +143,9 @@ app.put("/api/items/:id", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(Number(PORT), '0.0.0.0', () => {
-  console.log(`🚀 Business OS Backend running on http://10.59.0.114:${PORT}`);
+const HOST = process.env.HOST || '0.0.0.0';
+const PUBLIC_IP = process.env.PUBLIC_IP || 'localhost';
+
+app.listen(Number(PORT), HOST, () => {
+  console.log(`🚀 Business OS Backend running on http://${PUBLIC_IP}:${PORT}`);
 });
