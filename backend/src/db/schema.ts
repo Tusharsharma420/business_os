@@ -23,9 +23,12 @@ export const items = sqliteTable("items", {
 export const transactions = sqliteTable("transactions", {
   id: text("id").primaryKey(),
   type: text("type", { enum: ["IN", "OUT"] }).notNull(),
-  amount: real("amount").notNull(),
+  amount: real("amount").notNull(), // Total after discount & tax
   contactId: text("contact_id").references(() => contacts.id),
-  itemId: text("item_id").references(() => items.id),
+  lineItems: text("line_items"), // JSON string: { itemId, name, qty, price, discount, tax }[]
+  discount: real("discount").default(0),
+  tax: real("tax").notNull().default(0),
+  status: text("status", { enum: ["paid", "pending", "overdue"] }).default("paid"),
   notes: text("notes"),
   createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
 });

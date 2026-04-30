@@ -27,10 +27,11 @@ const CONTACT_TYPES: ContactType[] = ['Customer', 'Vendor', 'Partner', 'Other'];
 
 export default function ContactsScreen() {
   const router = useRouter();
-  const { contacts, transactions, addContact, deleteContact, identity } = useOSStore();
+  const { contacts, transactions, addContact, updateContact, deleteContact, identity } = useOSStore();
   const cur = identity.currency;
 
   const [sheetVisible, setSheetVisible] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [selectedType, setSelectedType] = useState<ContactType>('Customer');
   const [searchQuery, setSearchQuery] = useState('');
@@ -39,14 +40,25 @@ export default function ContactsScreen() {
     c.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleAdd = () => {
+  const handleSave = () => {
     if (!name.trim()) return;
-    addContact({ name: name.trim(), type: selectedType });
+    if (editingId) {
+      updateContact(editingId, { name: name.trim(), type: selectedType });
+    } else {
+      addContact({ name: name.trim(), type: selectedType });
+    }
     resetForm();
   };
 
   const resetForm = () => {
-    setName(''); setSelectedType('Customer'); setSheetVisible(false);
+    setName(''); setSelectedType('Customer'); setEditingId(null); setSheetVisible(false);
+  };
+
+  const handleEdit = (contact: Contact) => {
+    setEditingId(contact.id);
+    setName(contact.name);
+    setSelectedType(contact.type);
+    setSheetVisible(true);
   };
 
   const handleDelete = (id: string, cName: string) => {
@@ -96,7 +108,7 @@ export default function ContactsScreen() {
 
             return (
               <TouchableOpacity
-                onPress={() => router.push({ pathname: '/contact/[contactId]', params: { contactId: item.id } })}
+                onPress={() => handleEdit(item)}
                 onLongPress={() => handleDelete(item.id, item.name)}
               >
                 <AppleCard style={styles.contactCard}>
@@ -122,7 +134,7 @@ export default function ContactsScreen() {
         />
       </View>
 
-      <BottomSheet visible={sheetVisible} onClose={resetForm} title="New Contact">
+      <BottomSheet visible={sheetVisible} onClose={resetForm} title={editingId ? "Edit Contact" : "New Contact"}>
         <ScrollView style={styles.form} keyboardShouldPersistTaps="handled">
           <FormInput label="Name" value={name} onChangeText={setName} placeholder="John Doe" />
           
@@ -141,7 +153,7 @@ export default function ContactsScreen() {
             </View>
           </View>
 
-          <PrimaryButton label="Create Contact" onPress={handleAdd} />
+          <PrimaryButton label={editingId ? "Save Changes" : "Create Contact"} onPress={handleSave} />
           <View style={{ height: 40 }} />
         </ScrollView>
       </BottomSheet>

@@ -91,21 +91,20 @@ app.post("/api/items", async (req, res) => {
 // ==========================================
 
 app.get("/api/transactions", async (req, res) => {
-  // Can join to get contact and item details later
   const allTransactions = await db.select().from(transactions);
-  res.json(allTransactions);
+  const correctlyParsed = allTransactions.map(t => ({
+    ...t,
+    lineItems: t.lineItems ? JSON.parse(t.lineItems as string) : []
+  }));
+  res.json(correctlyParsed);
 });
 
 app.post("/api/transactions", async (req, res) => {
   try {
-    const { type, amount, contactId, itemId, notes } = req.body;
     const newTx = await db.insert(transactions).values({
-      id: generateId(),
-      type,
-      amount,
-      contactId,
-      itemId,
-      notes
+      id: req.body.id || generateId(),
+      ...req.body,
+      lineItems: typeof req.body.lineItems === 'object' ? JSON.stringify(req.body.lineItems) : req.body.lineItems
     }).returning();
     res.status(201).json(newTx[0]);
   } catch (err: any) {

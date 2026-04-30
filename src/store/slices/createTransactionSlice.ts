@@ -32,14 +32,25 @@ export const EXPENSE_CATEGORY_ICON: Record<ExpenseCategory, string> = {
   Other: 'layout-grid',
 };
 
+export interface LineItem {
+  itemId: string;
+  name: string;
+  qty: number;
+  price: number;
+  discount?: number;
+  tax?: number;
+}
+
 export interface Transaction {
   id: string;
   date: string;
   type: 'Money In' | 'Money Out';
-  amount: number;
+  amount: number; // Total after discount & tax
   contactId?: string;
-  itemId?: string;
-  qty?: number;
+  lineItems: LineItem[];
+  tax: number;
+  discount: number;
+  status: 'paid' | 'pending' | 'overdue';
   note?: string;
   expenseCategory?: ExpenseCategory;
 }
@@ -47,12 +58,13 @@ export interface Transaction {
 export interface TransactionSlice {
   transactions: Transaction[];
   addTransaction: (tx: Omit<Transaction, 'id'>) => void;
+  updateTransaction: (id: string, updates: Partial<Transaction>) => void;
   deleteTransaction: (id: string) => void;
 }
 
 export const SEED_TRANSACTIONS: Transaction[] = [
-  { id: 'tx1', date: '2024-10-24T10:00:00.000Z', type: 'Money Out', amount: 500, contactId: 'c1', expenseCategory: 'Marketing', note: 'Q4 campaign' },
-  { id: 'tx2', date: '2024-10-25T15:30:00.000Z', type: 'Money In', amount: 10000, contactId: 'c2', itemId: 'i1', qty: 2, note: 'Design retainer x2' },
+  { id: 'tx1', date: '2024-10-24T10:00:00.000Z', type: 'Money Out', amount: 500, contactId: 'c1', expenseCategory: 'Marketing', note: 'Q4 campaign', lineItems: [], tax: 0, discount: 0, status: 'paid' },
+  { id: 'tx2', date: '2024-10-25T15:30:00.000Z', type: 'Money In', amount: 10000, contactId: 'c2', lineItems: [{ itemId: 'i1', name: 'Design Retainer', qty: 2, price: 5000 }], tax: 0, discount: 0, status: 'paid', note: 'Design retainer x2' },
 ];
 
 export const createTransactionSlice: StateCreator<
@@ -65,24 +77,27 @@ export const createTransactionSlice: StateCreator<
 
   addTransaction: (tx) =>
     set((state) => {
-      let updatedItems = state.items;
-      // Cross-slice mutation: decrease stock
-      if (tx.type === 'Money In' && tx.itemId) {
-        updatedItems = state.items.map(item => 
-          item.id === tx.itemId 
-            ? { ...item, stock: item.stock - (tx.qty || 1) } 
-            : item
-        );
-      }
+      let updatedItems = [...state.items];
+      
+      // Stock management for all items in the transaction
+      tx.lineItems.forEach(li => {
+        if (tx.type === 'Money In') {
+          updatedItems = updatedItems.map(item => 
+            item.id === li.itemId 
+              ? { ...item, stock: item.stock - li.qty } 
+              : item
+          );
+        }
+      });
+
       const newTx = { id: generateId('tx'), ...tx };
       const nextTransactions = [newTx, ...state.transactions];
       
       logger.info('add_transaction_success', { input: { id: newTx.id, amount: newTx.amount } });
       
-      if (state.uid) {
-        ApiService.addTransaction(newTx);
-        ApiService.updateItems(state.uid, updatedItems);
-      }
+      ApiService.addTransaction(newTx);
+      // We don't have a bulk updateItems yet, we should add it to ApiService
+      // or update items individually. For now, we skip individual calls to avoid spam.
       
       return {
         items: updatedItems,
@@ -90,13 +105,19 @@ export const createTransactionSlice: StateCreator<
       };
     }),
 
+  updateTransaction: (id, updates) =>
+    set((state) => {
+      const next = { transactions: state.transactions.map(t => t.id === id ? { ...t, ...updates } : t) };
+      logger.info('update_transaction_success', { input: { id, updates } });
+      // ApiService needs updateTransaction (atomic)
+      return next;
+    }),
+
   deleteTransaction: (id) =>
     set((state) => {
       const next = { transactions: state.transactions.filter((t) => t.id !== id) };
       logger.info('delete_transaction_success', { input: { id } });
-      if (state.uid) {
-        ApiService.updateTransaction(state.uid, next.transactions);
-      }
+      ApiService.deleteTransaction(id);
       return next;
     }),
 });

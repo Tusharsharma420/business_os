@@ -1,63 +1,110 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Alert } from 'react-native';
 import { useOSStore } from '@/store/useOSStore';
-import type { ExpenseCategory } from '@/store/useOSStore';
+import type { ExpenseCategory, LineItem } from '@/store/useOSStore';
 
 type TxType = 'Money In' | 'Money Out';
 
 export function useTransactionLogic(contactIdParam?: string, addParam?: string) {
-  const { transactions, contacts, items, addTransaction, deleteTransaction, addContact, addItem, identity } = useOSStore();
+  const { 
+    transactions, contacts, items, 
+    addTransaction, deleteTransaction, 
+    addContact, identity 
+  } = useOSStore();
+  
   const cur = identity.currency;
 
   const [sheetVisible, setSheetVisible] = useState(false);
   const [txType, setTxType] = useState<TxType>('Money In');
-  const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
-  const [contactIdx, setContactIdx] = useState(0);
-  const [itemIdx, setItemIdx] = useState(0);
+  const [contactId, setContactId] = useState<string | undefined>(contactIdParam);
   const [expenseCat, setExpenseCat] = useState<ExpenseCategory>('Other');
+  
+  // Multi-item state
+  const [lineItems, setLineItems] = useState<LineItem[]>([]);
+  const [globalDiscount, setGlobalDiscount] = useState(0);
+  const [globalTax, setGlobalTax] = useState(0);
 
-  // In-place addition states
-  const [isAddingContact, setIsAddingContact] = useState(false);
-  const [newContactName, setNewContactName] = useState('');
-  const [isAddingItem, setIsAddingItem] = useState(false);
-  const [newItemName, setNewItemName] = useState('');
+  const subtotal = useMemo(() => 
+    lineItems.reduce((sum, item) => sum + (item.price * item.qty), 0), 
+  [lineItems]);
 
-  const totalIn = transactions.filter(t => t.type === 'Money In').reduce((s, t) => s + t.amount, 0);
-  const totalOut = transactions.filter(t => t.type === 'Money Out').reduce((s, t) => s + t.amount, 0);
+  const total = useMemo(() => {
+    const afterDiscount = subtotal - globalDiscount;
+    return afterDiscount + globalTax;
+  }, [subtotal, globalDiscount, globalTax]);
+
+  const totalIn = useMemo(() => 
+    transactions.filter(t => t.type === 'Money In').reduce((s, t) => s + t.amount, 0), 
+  [transactions]);
+
+  const totalOut = useMemo(() => 
+    transactions.filter(t => t.type === 'Money Out').reduce((s, t) => s + t.amount, 0), 
+  [transactions]);
+
+  const addLineItem = (itemId: string) => {
+    const item = items.find(i => i.id === itemId);
+    if (!item) return;
+    
+    setLineItems(prev => {
+      const existing = prev.find(li => li.itemId === itemId);
+      if (existing) {
+        return prev.map(li => li.itemId === itemId ? { ...li, qty: li.qty + 1 } : li);
+      }
+      return [...prev, { 
+        itemId: item.id, 
+        name: item.name, 
+        qty: 1, 
+        price: item.price,
+        tax: 0,
+        discount: 0
+      }];
+    });
+  };
+
+  const removeLineItem = (itemId: string) => {
+    setLineItems(prev => prev.filter(li => li.itemId !== itemId));
+  };
+
+  const updateLineItemQty = (itemId: string, qty: number) => {
+    if (qty < 1) return removeLineItem(itemId);
+    setLineItems(prev => prev.map(li => li.itemId === itemId ? { ...li, qty } : li));
+  };
 
   const handleAddTx = useCallback(() => {
-    const parsed = parseFloat(amount);
-    if (!parsed || isNaN(parsed)) return;
+    if (txType === 'Money In' && lineItems.length === 0) {
+      Alert.alert('Empty Order', 'Please add at least one item.');
+      return;
+    }
+
+    // For Money Out, we might just have a total amount and category
+    // In this lean version, we handle both.
+    const finalAmount = txType === 'Money In' ? total : (subtotal || 0);
+
     addTransaction({
       date: new Date().toISOString(),
       type: txType,
-      amount: parsed,
-      contactId: contacts[contactIdx]?.id,
-      itemId: txType === 'Money In' ? items[itemIdx]?.id : undefined,
-      qty: 1,
+      amount: finalAmount,
+      contactId,
+      lineItems,
+      tax: globalTax,
+      discount: globalDiscount,
+      status: 'paid',
       note: note.trim() || undefined,
       expenseCategory: txType === 'Money Out' ? expenseCat : undefined,
     });
-    setAmount(''); setNote(''); setSheetVisible(false);
-  }, [amount, txType, contactIdx, itemIdx, note, expenseCat, contacts, items]);
 
-  const handleQuickAddContact = useCallback(() => {
-    if (!newContactName.trim()) return;
-    addContact({ name: newContactName.trim(), type: 'Customer' });
-    setNewContactName('');
-    setIsAddingContact(false);
-    setContactIdx(contacts.length);
-  }, [newContactName, contacts.length]);
+    resetForm();
+  }, [total, subtotal, txType, contactId, lineItems, note, expenseCat, globalDiscount, globalTax]);
 
-  const handleQuickAddItem = useCallback(() => {
-    if (newItemName.trim()) {
-      addItem({ name: newItemName.trim(), type: 'product', price: parseFloat(amount) || 0, category: 'Hardware', stock: 0, minStock: 0 });
-      setNewItemName('');
-      setIsAddingItem(false);
-    }
-    setItemIdx(items.length);
-  }, [newItemName, amount, items.length]);
+  const resetForm = () => {
+    setLineItems([]);
+    setGlobalDiscount(0);
+    setGlobalTax(0);
+    setNote('');
+    setSheetVisible(false);
+    setTxType('Money In');
+  };
 
   const handleDelete = useCallback((id: string) => {
     Alert.alert('Delete Transaction', 'This cannot be undone.', [
@@ -68,13 +115,13 @@ export function useTransactionLogic(contactIdParam?: string, addParam?: string) 
 
   return {
     state: {
-      transactions, contacts, items, cur, sheetVisible, txType, amount, note, contactIdx, itemIdx, expenseCat,
-      isAddingContact, newContactName, isAddingItem, newItemName, totalIn, totalOut
+      transactions, contacts, items, cur, sheetVisible, txType, note, contactId, expenseCat,
+      lineItems, subtotal, total, globalDiscount, globalTax, totalIn, totalOut
     },
     actions: {
-      setSheetVisible, setTxType, setAmount, setNote, setContactIdx, setItemIdx, setExpenseCat,
-      setIsAddingContact, setNewContactName, setIsAddingItem, setNewItemName,
-      handleAddTx, handleQuickAddContact, handleQuickAddItem, handleDelete
+      setSheetVisible, setTxType, setNote, setContactId, setExpenseCat,
+      addLineItem, removeLineItem, updateLineItemQty, setGlobalDiscount, setGlobalTax,
+      handleAddTx, handleDelete, resetForm
     }
   };
 }
