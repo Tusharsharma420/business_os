@@ -94,14 +94,14 @@ export default function FeedScreen() {
              <AppleCard style={styles.miniCard}>
                 <Users size={24} color={AppleDesign.colors.primary} />
                 <Text style={styles.miniLabel}>People</Text>
-                <Text style={styles.miniValue}>{contacts.length}</Text>
+                <Text style={styles.miniValue}>{contacts?.length || 0}</Text>
              </AppleCard>
           </TouchableOpacity>
           <TouchableOpacity style={styles.gridItem} onPress={() => router.push('/items')}>
              <AppleCard style={styles.miniCard}>
                 <Package size={24} color="#FF9500" />
                 <Text style={styles.miniLabel}>Catalog</Text>
-                <Text style={styles.miniValue}>{items.length}</Text>
+                <Text style={styles.miniValue}>{items?.length || 0}</Text>
              </AppleCard>
           </TouchableOpacity>
         </View>

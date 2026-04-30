@@ -36,7 +36,7 @@ export function useDashboardLogic() {
     return {
       identity, cur, moneyIn, moneyOut, net, isPositive, recent, 
       topItem, customers, vendors, totalItems: items.length, 
-      lowStockItems, monthlyRevenue, goalProgress, contacts
+      lowStockItems, monthlyRevenue, goalProgress, contacts, items
     };
   }, [transactions, contacts, items, identity]);
 }
