@@ -37,16 +37,14 @@ export const useOSStore = create<OSState>()(
         const cloudData = await ApiService.fetchUserData(uid);
         
         if (cloudData) {
-          // Cloud exists: Hydrate state (Merging strategy: Cloud wins)
           set({
-            identity: { ...get().identity, ...cloudData.identity },
+            identity: { ...get().identity, ...(cloudData as any).identity },
             contacts: cloudData.contacts || get().contacts,
             items: cloudData.items || get().items,
             transactions: cloudData.transactions || get().transactions,
           });
           logger.info('sync_with_cloud', { output: 'Hydrated state from cloud' });
         } else {
-          // Cloud empty: Push local migration
           const state = get();
           await ApiService.saveFullSync(uid, {
             identity: state.identity,

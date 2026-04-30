@@ -37,13 +37,12 @@ export const createContactSlice: StateCreator<
       const newContact = { id: generateId('c'), ...c };
       const next = { contacts: [newContact, ...state.contacts] };
       logger.info('add_contact_success', { input: { id: newContact.id } });
-      if (state.uid) ApiService.addContact(newContact);
+      ApiService.addContact(newContact);
       return next;
     }),
 
   deleteContact: (id) =>
     set((state) => {
-      // Cross-slice constraint: Check if transactions use this contact
       const inUse = state.transactions.some((t) => t.contactId === id);
       if (inUse) {
         logger.warn('delete_contact_failed', { error: 'Contact in use.', input: { id } });
@@ -51,7 +50,7 @@ export const createContactSlice: StateCreator<
       }
       const next = { contacts: state.contacts.filter((c) => c.id !== id) };
       logger.info('delete_contact_success', { input: { id } });
-      if (state.uid) FirebaseService.updateContacts(state.uid, next.contacts);
+      ApiService.deleteContact(id);
       return next;
     }),
 });

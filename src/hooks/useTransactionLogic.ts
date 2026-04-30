@@ -52,7 +52,7 @@ export function useTransactionLogic(contactIdParam?: string, addParam?: string) 
 
   const handleQuickAddItem = useCallback(() => {
     if (newItemName.trim()) {
-      addItem({ name: newItemName.trim(), price: parseFloat(amount) || 0, category: 'Hardware', stock: 0, minStock: 0 });
+      addItem({ name: newItemName.trim(), type: 'product', price: parseFloat(amount) || 0, category: 'Hardware', stock: 0, minStock: 0 });
       setNewItemName('');
       setIsAddingItem(false);
     }

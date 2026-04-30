@@ -1,7 +1,8 @@
+import Constants from 'expo-constants';
 import { createLogger } from '@/lib/logger';
 
 const logger = createLogger('apiService');
-const API_URL = 'http://10.59.0.114:3000/api';
+const API_URL = Constants.expoConfig?.extra?.apiUrl || 'http://localhost:3000/api';
 
 export const ApiService = {
   // Sync the entire state (Fallback)
@@ -109,5 +110,31 @@ export const ApiService = {
 
   async deleteTransaction(id: string) {
     return fetch(`${API_URL}/transactions/${id}`, { method: 'DELETE' });
+  },
+
+  async updateItem(id: string, updates: any) {
+    try {
+      const res = await fetch(`${API_URL}/items/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+      return await res.json();
+    } catch (e: any) {
+      logger.error('api_update_item_error', { error: e.message });
+    }
+  },
+
+  async updateContact(id: string, updates: any) {
+    try {
+      const res = await fetch(`${API_URL}/contacts/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+      return await res.json();
+    } catch (e: any) {
+      logger.error('api_update_contact_error', { error: e.message });
+    }
   }
 };

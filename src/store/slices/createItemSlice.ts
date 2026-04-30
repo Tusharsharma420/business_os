@@ -9,10 +9,12 @@ const logger = createLogger('ItemSlice');
 export interface Item {
   id: string;
   name: string;
+  type: 'product' | 'service';
   price: number;
   category: string;
   stock: number;
   minStock: number;
+  imageUrl?: string;
 }
 
 export interface ItemSlice {
@@ -23,8 +25,8 @@ export interface ItemSlice {
 }
 
 export const SEED_ITEMS: Item[] = [
-  { id: 'i1', name: 'Monthly Design Retainer', price: 5000, category: 'Service', stock: 999, minStock: 0 },
-  { id: 'i2', name: 'Premium Server Rack', price: 1200, category: 'Hardware', stock: 5, minStock: 2 },
+  { id: 'i1', name: 'Monthly Design Retainer', type: 'service', price: 5000, category: 'Service', stock: 999, minStock: 0 },
+  { id: 'i2', name: 'Premium Server Rack', type: 'product', price: 1200, category: 'Hardware', stock: 5, minStock: 2 },
 ];
 
 export const createItemSlice: StateCreator<
@@ -40,7 +42,7 @@ export const createItemSlice: StateCreator<
       const newItem = { id: generateId('i'), ...i, stock: i.stock ?? 0, minStock: i.minStock ?? 0 };
       const next = { items: [newItem, ...state.items] };
       logger.info('add_item_success', { input: { id: newItem.id } });
-      if (state.uid) ApiService.addItem(newItem);
+      ApiService.addItem(newItem);
       return next;
     }),
 
@@ -48,7 +50,7 @@ export const createItemSlice: StateCreator<
     set((state) => {
       const next = { items: state.items.map((i) => (i.id === id ? { ...i, ...updates } : i)) };
       logger.info('update_item_success', { input: { id, updates } });
-      if (state.uid) FirebaseService.updateItems(state.uid, next.items);
+      ApiService.updateItem(id, updates);
       return next;
     }),
 
@@ -61,7 +63,7 @@ export const createItemSlice: StateCreator<
       }
       const next = { items: state.items.filter((i) => i.id !== id) };
       logger.info('delete_item_success', { input: { id } });
-      if (state.uid) FirebaseService.updateItems(state.uid, next.items);
+      ApiService.deleteItem(id);
       return next;
     }),
 });
