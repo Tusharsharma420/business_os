@@ -35,9 +35,17 @@
   - [x] Verify atomic integrity with real-world test cases.
 
 ## 📦 Phase 3: Business Modules
-- [ ] **Task 3.1: Catalog & Inventory**
-  - [ ] Implement Product/Service management API.
-  - [ ] Connect Catalog items to Ledger transactions.
-- [ ] **Task 3.2: Contact Management**
-  - [ ] Implement Client/Supplier directory.
-  - [ ] Link contacts to financial records.
+- [x] **Task 3.1: Catalog & Inventory**
+  - [x] Implement Product/Service management API.
+  - [x] Create mobile UI for Catalog management.
+- [x] **Task 3.2: Contact Management**
+  - [x] Implement Client/Supplier directory API.
+  - [x] Create mobile UI for Contact management.
+
+## 📈 Phase 4: Insights & Reporting
+- [ ] **Task 4.1: Financial Dashboard**
+  - [ ] Implement real-time P&L calculation.
+  - [ ] Create data visualization charts (Revenue vs Expense).
+- [ ] **Task 4.2: Document Generation**
+  - [ ] Implement PDF Invoice generation.
+  - [ ] Export Ledger reports as CSV.

@@ -4,6 +4,8 @@ import jwt from '@fastify/jwt';
 import dotenv from 'dotenv';
 import { authRoutes } from './routes/auth.js';
 import { ledgerRoutes } from './routes/ledger.js';
+import { catalogRoutes } from './routes/catalog.js';
+import { contactRoutes } from './routes/contacts.js';
 
 dotenv.config();
 
@@ -22,6 +24,8 @@ fastify.register(jwt, {
 
 fastify.register(authRoutes, { prefix: '/api/auth' });
 fastify.register(ledgerRoutes, { prefix: '/api/ledger' });
+fastify.register(catalogRoutes, { prefix: '/api/catalog' });
+fastify.register(contactRoutes, { prefix: '/api/contacts' });
 
 // Health Check
 fastify.get('/health', async () => {
