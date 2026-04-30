@@ -1,4 +1,16 @@
-# Walkthrough Log
+# 🚶 Walkthrough: Business OS v5 Rebuild
 
-## Event Log
-- Initialize System Mode for Custom Database build.
+## [2026-04-30] Initializing the First Principles Rebuild
+- **Action**: Created branch `feature/v5-first-principles-rebuild`.
+- **Action**: Initialized `implementation_plan.md` and `task.md` with a focus on a high-performance monorepo architecture.
+- **Action**: Established NPM workspaces for `apps/*` and `packages/*`.
+- **Action**: Created core primitive types in `@business-os/shared`.
+- **Action**: Configured Docker Compose for local infrastructure.
+- **Decision**: Chose **Fastify** for the backend due to its speed and native JSON Schema support, aligning with the "operational velocity" principle.
+- **Decision**: Chose **PostgreSQL** for the database to ensure relational integrity, critical for accounting.
+- **Action**: Pivoted to **SQLite** (via LibSQL) for zero-config local development and stability.
+- **Action**: Verified full Auth cycle (Signup/Login) with persistent DB storage.
+- **Action**: Initialized Mobile Service layer and Zustand state management.
+- **Action**: Implemented premium "Apple-clean" Login/Signup screens and protected routing logic.
+- **Action**: Engineered and verified the atomic Double-Entry Ledger Engine (Asset/Revenue/Expense tracking).
+- **Action**: Implemented the Product Catalog and Contact Management (CRM) modules across API and UI.

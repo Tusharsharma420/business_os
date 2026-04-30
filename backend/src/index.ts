@@ -1,9 +1,11 @@
 import express from "express";
 import cors from "cors";
+import dotenv from "dotenv";
 import { db } from "./db/db";
 import { contacts, items, transactions, business_identity } from "./db/schema";
 import { eq } from "drizzle-orm";
 
+dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -89,21 +91,20 @@ app.post("/api/items", async (req, res) => {
 // ==========================================
 
 app.get("/api/transactions", async (req, res) => {
-  // Can join to get contact and item details later
   const allTransactions = await db.select().from(transactions);
-  res.json(allTransactions);
+  const correctlyParsed = allTransactions.map(t => ({
+    ...t,
+    lineItems: t.lineItems ? JSON.parse(t.lineItems as string) : []
+  }));
+  res.json(correctlyParsed);
 });
 
 app.post("/api/transactions", async (req, res) => {
   try {
-    const { type, amount, contactId, itemId, notes } = req.body;
     const newTx = await db.insert(transactions).values({
-      id: generateId(),
-      type,
-      amount,
-      contactId,
-      itemId,
-      notes
+      id: req.body.id || generateId(),
+      ...req.body,
+      lineItems: typeof req.body.lineItems === 'object' ? JSON.stringify(req.body.lineItems) : req.body.lineItems
     }).returning();
     res.status(201).json(newTx[0]);
   } catch (err: any) {
@@ -140,7 +141,33 @@ app.put("/api/items/:id", async (req, res) => {
   res.json(updated[0]);
 });
 
+// ==========================================
+// 5. ANALYTICS ENGINE
+// ==========================================
+
+app.get("/api/analytics/summary", async (req, res) => {
+  try {
+    const txs = await db.select().from(transactions);
+    const summary = txs.reduce((acc, tx) => {
+      if (tx.type === "IN") acc.totalIn += tx.amount;
+      if (tx.type === "OUT") acc.totalOut += tx.amount;
+      return acc;
+    }, { totalIn: 0, totalOut: 0 });
+
+    res.json({
+      ...summary,
+      balance: summary.totalIn - summary.totalOut,
+      transactionCount: txs.length
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
-app.listen(Number(PORT), '0.0.0.0', () => {
-  console.log(`🚀 Business OS Backend running on http://10.59.0.114:${PORT}`);
+const HOST = process.env.HOST || '0.0.0.0';
+const PUBLIC_IP = process.env.PUBLIC_IP || 'localhost';
+
+app.listen(Number(PORT), HOST, () => {
+  console.log(`🚀 Business OS Backend running on http://${PUBLIC_IP}:${PORT}`);
 });
