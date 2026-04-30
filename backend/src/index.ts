@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { db } from "./db/db";
-import { contacts, items, transactions } from "./db/schema";
+import { contacts, items, transactions, business_identity } from "./db/schema";
 import { eq } from "drizzle-orm";
 
 const app = express();
@@ -13,6 +13,26 @@ const generateId = () => Math.random().toString(36).substring(2, 15);
 
 app.get("/", (req, res) => {
   res.json({ message: "🚀 Business OS Backend is live!", status: "healthy" });
+});
+
+app.get("/api/identity", async (req, res) => {
+  const identity = await db.select().from(business_identity);
+  res.json(identity[0] || {});
+});
+
+app.post("/api/identity", async (req, res) => {
+  const { name, taxId, currency, address, email, phone } = req.body;
+  const existing = await db.select().from(business_identity);
+  if (existing.length > 0) {
+    const updated = await db.update(business_identity).set(req.body).where(eq(business_identity.id, existing[0].id)).returning();
+    res.json(updated[0]);
+  } else {
+    const created = await db.insert(business_identity).values({
+      id: "singleton",
+      name, taxId, currency, address, email, phone
+    }).returning();
+    res.json(created[0]);
+  }
 });
 
 // ==========================================
@@ -89,6 +109,35 @@ app.post("/api/transactions", async (req, res) => {
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }
+});
+
+// ==========================================
+// 4. UPDATES & DELETIONS
+// ==========================================
+
+app.delete("/api/contacts/:id", async (req, res) => {
+  await db.delete(contacts).where(eq(contacts.id, req.params.id));
+  res.json({ success: true });
+});
+
+app.delete("/api/items/:id", async (req, res) => {
+  await db.delete(items).where(eq(items.id, req.params.id));
+  res.json({ success: true });
+});
+
+app.delete("/api/transactions/:id", async (req, res) => {
+  await db.delete(transactions).where(eq(transactions.id, req.params.id));
+  res.json({ success: true });
+});
+
+app.put("/api/contacts/:id", async (req, res) => {
+  const updated = await db.update(contacts).set(req.body).where(eq(contacts.id, req.params.id)).returning();
+  res.json(updated[0]);
+});
+
+app.put("/api/items/:id", async (req, res) => {
+  const updated = await db.update(items).set(req.body).where(eq(items.id, req.params.id)).returning();
+  res.json(updated[0]);
 });
 
 const PORT = process.env.PORT || 3000;

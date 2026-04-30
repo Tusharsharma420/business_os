@@ -27,3 +27,13 @@ export const transactions = sqliteTable("transactions", {
   notes: text("notes"),
   createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
+
+export const business_identity = sqliteTable("business_identity", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  taxId: text("tax_id"),
+  currency: text("currency").default("₹"),
+  address: text("address"),
+  email: text("email"),
+  phone: text("phone"),
+});

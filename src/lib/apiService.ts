@@ -79,7 +79,35 @@ export const ApiService = {
   },
 
   // Legacy full array update signatures to avoid breaking immediately
-  async updateItems(uid: string, items: any[]) {},
+  async updateItems(uid: string, items: any[]) {
+    // In our new architecture, we should update individually, 
+    // but for now, this stub prevents crashes.
+  },
+
   async updateContacts(uid: string, contacts: any[]) {},
-  async updateIdentity(uid: string, identity: any) {}
+
+  async updateIdentity(uid: string, identity: any) {
+    // Identity is a singleton in our logic for now
+    try {
+      await fetch(`${API_URL}/identity`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(identity)
+      });
+    } catch (e) {
+      logger.error('api_update_identity_error', { error: (e as any).message });
+    }
+  },
+
+  async deleteContact(id: string) {
+    return fetch(`${API_URL}/contacts/${id}`, { method: 'DELETE' });
+  },
+
+  async deleteItem(id: string) {
+    return fetch(`${API_URL}/items/${id}`, { method: 'DELETE' });
+  },
+
+  async deleteTransaction(id: string) {
+    return fetch(`${API_URL}/transactions/${id}`, { method: 'DELETE' });
+  }
 };
