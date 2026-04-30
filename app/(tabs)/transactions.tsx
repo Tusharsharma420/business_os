@@ -90,7 +90,7 @@ export default function TransactionsScreen() {
                       <Text style={styles.txName}>{contact?.name ?? 'Business Transaction'}</Text>
                       <Text style={styles.txDate}>
                         {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                        {item.lineItems.length > 0 ? ` • ${item.lineItems.length} items` : ''}
+                        {item.lineItems?.length > 0 ? ` • ${item.lineItems.length} items` : ''}
                       </Text>
                     </View>
                     <View style={styles.txAmtCol}>

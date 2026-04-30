@@ -51,7 +51,7 @@ export default function InvoiceScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.statusBadge}>
           <CheckCircle2 size={16} color="#2E7D32" />
-          <Text style={styles.statusText}>{tx.status.toUpperCase()}</Text>
+          <Text style={styles.statusText}>{(tx.status || 'paid').toUpperCase()}</Text>
         </View>
 
         <Text style={styles.amount}>{cur}{tx.amount.toLocaleString()}</Text>
@@ -66,7 +66,7 @@ export default function InvoiceScreen() {
 
         <AppleCard style={styles.sectionCard}>
           <Text style={styles.sectionLabel}>ITEMS</Text>
-          {tx.lineItems.length > 0 ? tx.lineItems.map((li, idx) => (
+          {(tx.lineItems?.length || 0) > 0 ? tx.lineItems.map((li, idx) => (
             <View key={idx} style={styles.itemRow}>
                <View style={{ flex: 1 }}>
                   <Text style={styles.itemName}>{li.name}</Text>
@@ -82,18 +82,18 @@ export default function InvoiceScreen() {
           
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Subtotal</Text>
-            <Text style={styles.summaryValue}>{cur}{(tx.amount + tx.discount - tx.tax).toLocaleString()}</Text>
+            <Text style={styles.summaryValue}>{cur}{(tx.amount + (tx.discount || 0) - (tx.tax || 0)).toLocaleString()}</Text>
           </View>
-          {tx.discount > 0 && (
+          {(tx.discount || 0) > 0 && (
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Discount</Text>
-              <Text style={[styles.summaryValue, { color: '#C62828' }]}>-{cur}{tx.discount.toLocaleString()}</Text>
+              <Text style={[styles.summaryValue, { color: '#C62828' }]}>-{cur}{(tx.discount || 0).toLocaleString()}</Text>
             </View>
           )}
-          {tx.tax > 0 && (
+          {(tx.tax || 0) > 0 && (
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Tax</Text>
-              <Text style={styles.summaryValue}>+{cur}{tx.tax.toLocaleString()}</Text>
+              <Text style={styles.summaryValue}>+{cur}{(tx.tax || 0).toLocaleString()}</Text>
             </View>
           )}
           <View style={[styles.summaryRow, { marginTop: 8 }]}>
