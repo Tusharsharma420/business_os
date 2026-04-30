@@ -20,7 +20,9 @@ import {
   Calendar,
   Filter,
   ShoppingCart,
-  ReceiptText
+  ReceiptText,
+  ShoppingBag,
+  LayoutGrid
 } from 'lucide-react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 
