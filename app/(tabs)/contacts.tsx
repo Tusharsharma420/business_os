@@ -19,8 +19,10 @@ import {
   MessageCircle,
   Phone,
   MoreVertical,
-  UserPlus
+  UserPlus,
+  Trash2
 } from 'lucide-react-native';
+import { Swipeable } from 'react-native-gesture-handler';
 
 type ContactType = Contact['type'];
 const CONTACT_TYPES: ContactType[] = ['Customer', 'Vendor', 'Partner', 'Other'];
@@ -106,29 +108,40 @@ export default function ContactsScreen() {
               .filter(t => t.contactId === item.id)
               .reduce((s, t) => s + (t.type === 'Money In' ? t.amount : -t.amount), 0);
 
-            return (
-              <TouchableOpacity
-                onPress={() => handleEdit(item)}
-                onLongPress={() => handleDelete(item.id, item.name)}
+            const renderRightActions = () => (
+              <TouchableOpacity 
+                style={styles.deleteAction} 
+                onPress={() => handleDelete(item.id, item.name)}
               >
-                <AppleCard style={styles.contactCard}>
-                  <View style={styles.cardRow}>
-                    <View style={styles.avatar}>
-                      <Text style={styles.avatarText}>{item.name.charAt(0).toUpperCase()}</Text>
-                    </View>
-                    <View style={styles.info}>
-                      <Text style={styles.name}>{item.name}</Text>
-                      <Text style={styles.typeText}>{item.type} &bull; {txCount} txs</Text>
-                    </View>
-                    <View style={styles.balanceCol}>
-                      <Text style={[styles.balance, { color: balance >= 0 ? '#2E7D32' : '#C62828' }]}>
-                        {cur}{Math.abs(balance).toLocaleString()}
-                      </Text>
-                      <ChevronRight size={16} color={AppleDesign.colors.text.low} />
-                    </View>
-                  </View>
-                </AppleCard>
+                <Trash2 color="#fff" size={24} />
               </TouchableOpacity>
+            );
+
+            return (
+              <Swipeable renderRightActions={renderRightActions}>
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => handleEdit(item)}
+                >
+                  <AppleCard style={styles.contactCard}>
+                    <View style={styles.cardRow}>
+                      <View style={styles.avatar}>
+                        <Text style={styles.avatarText}>{item.name.charAt(0).toUpperCase()}</Text>
+                      </View>
+                      <View style={styles.info}>
+                        <Text style={styles.name}>{item.name}</Text>
+                        <Text style={styles.typeText}>{item.type} &bull; {txCount} txs</Text>
+                      </View>
+                      <View style={styles.balanceCol}>
+                        <Text style={[styles.balance, { color: balance >= 0 ? '#2E7D32' : '#C62828' }]}>
+                          {cur}{Math.abs(balance).toLocaleString()}
+                        </Text>
+                        <ChevronRight size={16} color={AppleDesign.colors.text.low} />
+                      </View>
+                    </View>
+                  </AppleCard>
+                </TouchableOpacity>
+              </Swipeable>
             );
           }}
         />
@@ -253,6 +266,16 @@ const styles = StyleSheet.create({
   balance: {
     fontSize: 16,
     fontWeight: '700',
+  },
+  deleteAction: {
+    backgroundColor: AppleDesign.colors.danger,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    height: 74, // Match contactCard height roughly
+    borderRadius: 16,
+    marginVertical: 4,
+    marginRight: 10,
   },
   form: {
     padding: 24,

@@ -11,18 +11,18 @@ import { PrimaryButton } from '@/components/PrimaryButton';
 import { AppleCard } from '@/components/AppleCard';
 import { Icon } from '@/components/ui/icon';
 import { 
+  Plus, 
+  Search, 
+  Trash2, 
   ArrowUpRight, 
   ArrowDownLeft, 
-  Plus, 
-  X, 
-  Trash2, 
-  ChevronRight,
-  ShoppingBag,
-  History,
-  Tag,
-  Percent,
+  ChevronRight, 
+  Calendar,
+  Filter,
+  ShoppingCart,
   ReceiptText
 } from 'lucide-react-native';
+import { Swipeable } from 'react-native-gesture-handler';
 
 import { useTransactionLogic } from '@/hooks/useTransactionLogic';
 
@@ -76,32 +76,44 @@ export default function TransactionsScreen() {
           renderItem={({ item }) => {
             const contact = state.contacts.find(c => c.id === item.contactId);
             const isIn = item.type === 'Money In';
-            return (
+
+            const renderRightActions = () => (
               <TouchableOpacity 
-                onPress={() => router.push({ pathname: '/invoice/[txId]', params: { txId: item.id } })}
-                onLongPress={() => actions.handleDelete(item.id)}
+                style={styles.deleteAction} 
+                onPress={() => actions.handleDelete(item.id)}
               >
-                <AppleCard style={styles.txCard}>
-                  <View style={styles.txRow}>
-                    <View style={[styles.txIcon, { backgroundColor: isIn ? '#E8F5E9' : '#FFEBEE' }]}>
-                      <Icon icon={isIn ? ArrowDownLeft : ArrowUpRight} size={20} color={isIn ? '#2E7D32' : '#C62828'} />
-                    </View>
-                    <View style={styles.txInfo}>
-                      <Text style={styles.txName}>{contact?.name ?? 'Business Transaction'}</Text>
-                      <Text style={styles.txDate}>
-                        {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                        {item.lineItems?.length > 0 ? ` • ${item.lineItems.length} items` : ''}
-                      </Text>
-                    </View>
-                    <View style={styles.txAmtCol}>
-                      <Text style={[styles.txAmount, { color: isIn ? '#2E7D32' : '#C62828' }]}>
-                        {isIn ? '+' : '-'}{state.cur}{item.amount.toLocaleString()}
-                      </Text>
-                      <ChevronRight size={14} color={AppleDesign.colors.text.low} />
-                    </View>
-                  </View>
-                </AppleCard>
+                <Trash2 color="#fff" size={24} />
               </TouchableOpacity>
+            );
+
+            return (
+              <Swipeable renderRightActions={renderRightActions}>
+                <TouchableOpacity 
+                  activeOpacity={0.7}
+                  onPress={() => router.push({ pathname: '/invoice/[txId]', params: { txId: item.id } })}
+                >
+                  <AppleCard style={styles.txCard}>
+                    <View style={styles.txRow}>
+                      <View style={[styles.txIcon, { backgroundColor: isIn ? '#E8F5E9' : '#FFEBEE' }]}>
+                        <Icon icon={isIn ? ArrowDownLeft : ArrowUpRight} size={20} color={isIn ? '#2E7D32' : '#C62828'} />
+                      </View>
+                      <View style={styles.txInfo}>
+                        <Text style={styles.txName}>{contact?.name ?? 'Business Transaction'}</Text>
+                        <Text style={styles.txDate}>
+                          {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          {item.lineItems?.length > 0 ? ` • ${item.lineItems.length} items` : ''}
+                        </Text>
+                      </View>
+                      <View style={styles.txAmtCol}>
+                        <Text style={[styles.txAmount, { color: isIn ? '#2E7D32' : '#C62828' }]}>
+                          {isIn ? '+' : '-'}{state.cur}{item.amount.toLocaleString()}
+                        </Text>
+                        <ChevronRight size={14} color={AppleDesign.colors.text.low} />
+                      </View>
+                    </View>
+                  </AppleCard>
+                </TouchableOpacity>
+              </Swipeable>
             );
           }}
         />
@@ -329,7 +341,18 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '700',
   },
-  form: {
+  deleteAction: {
+    backgroundColor: AppleDesign.colors.danger,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    height: '80%', // Match AppleCard height roughly
+    borderRadius: 16,
+    marginVertical: 6,
+    marginRight: 10,
+  },
+  // Form Styles
+  sheetContent: {
     padding: 24,
   },
   typeSelector: {

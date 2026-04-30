@@ -23,6 +23,7 @@ import {
   Archive,
   ShoppingBag
 } from 'lucide-react-native';
+import { Swipeable } from 'react-native-gesture-handler';
 
 const CATEGORIES = ['Hardware', 'Software', 'Service', 'Other'];
 
@@ -120,29 +121,42 @@ export default function ItemsScreen() {
           keyExtractor={item => item.id}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => handleEdit(item)}>
-              <AppleCard style={styles.itemCard}>
-                <View style={styles.itemRow}>
-                  {item.imageUrl ? (
-                    <Image source={{ uri: item.imageUrl }} style={styles.itemImage} />
-                  ) : (
-                    <View style={styles.imagePlaceholder}>
-                      <Icon icon={item.type === 'product' ? ShoppingBag : LayoutGrid} size={24} color={AppleDesign.colors.text.low} />
+          renderItem={({ item }) => {
+            const renderRightActions = () => (
+              <TouchableOpacity 
+                style={styles.deleteAction} 
+                onPress={() => handleDelete(item.id)}
+              >
+                <Trash2 color="#fff" size={24} />
+              </TouchableOpacity>
+            );
+
+            return (
+              <Swipeable renderRightActions={renderRightActions}>
+                <TouchableOpacity onPress={() => handleEdit(item)}>
+                  <AppleCard style={styles.itemCard}>
+                    <View style={styles.itemRow}>
+                      {item.imageUrl ? (
+                        <Image source={{ uri: item.imageUrl }} style={styles.itemImage} />
+                      ) : (
+                        <View style={styles.imagePlaceholder}>
+                          <Icon icon={item.type === 'product' ? ShoppingBag : LayoutGrid} size={24} color={AppleDesign.colors.text.low} />
+                        </View>
+                      )}
+                      <View style={styles.itemInfo}>
+                        <Text style={styles.itemName}>{item.name}</Text>
+                        <Text style={styles.itemSub}>{item.category} &bull; {item.type}</Text>
+                      </View>
+                      <View style={styles.priceContainer}>
+                        <Text style={styles.itemPrice}>{cur}{item.price.toLocaleString()}</Text>
+                        <ChevronRight size={16} color={AppleDesign.colors.text.low} />
+                      </View>
                     </View>
-                  )}
-                  <View style={styles.itemInfo}>
-                    <Text style={styles.itemName}>{item.name}</Text>
-                    <Text style={styles.itemSub}>{item.category} &bull; {item.type}</Text>
-                  </View>
-                  <View style={styles.priceContainer}>
-                    <Text style={styles.itemPrice}>{cur}{item.price.toLocaleString()}</Text>
-                    <ChevronRight size={16} color={AppleDesign.colors.text.low} />
-                  </View>
-                </View>
-              </AppleCard>
-            </TouchableOpacity>
-          )}
+                  </AppleCard>
+                </TouchableOpacity>
+              </Swipeable>
+            );
+          }}
         />
       </View>
 
@@ -295,6 +309,16 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '700',
     color: AppleDesign.colors.primary,
+  },
+  deleteAction: {
+    backgroundColor: AppleDesign.colors.danger,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    height: 80, // Match AppleCard height roughly
+    borderRadius: 16,
+    marginVertical: 4,
+    marginRight: 10,
   },
   form: {
     padding: 24,

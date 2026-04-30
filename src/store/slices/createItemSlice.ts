@@ -14,6 +14,9 @@ export interface Item {
   category: string;
   stock: number;
   minStock: number;
+  stock?: number;
+  unit?: string;
+  description?: string;
   imageUrl?: string;
 }
 
@@ -25,8 +28,8 @@ export interface ItemSlice {
 }
 
 export const SEED_ITEMS: Item[] = [
-  { id: 'i1', name: 'Monthly Design Retainer', type: 'service', price: 5000, category: 'Service', stock: 999, minStock: 0 },
-  { id: 'i2', name: 'Premium Server Rack', type: 'product', price: 1200, category: 'Hardware', stock: 5, minStock: 2 },
+  { id: 'i1', name: 'Premium Coffee Beans', type: 'product', price: 1200, stock: 50, unit: 'kg', description: 'Arabica dark roast', imageUrl: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?q=80&w=200&auto=format&fit=crop' },
+  { id: 'i2', name: 'Web Design Service', type: 'service', price: 15000, description: 'Landing page design', imageUrl: 'https://images.unsplash.com/photo-1586717791821-3f44a563cc4c?q=80&w=200&auto=format&fit=crop' },
 ];
 
 export const createItemSlice: StateCreator<

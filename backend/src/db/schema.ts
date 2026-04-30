@@ -13,11 +13,13 @@ export const contacts = sqliteTable("contacts", {
 export const items = sqliteTable("items", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
-  type: text("type", { enum: ["product", "service"] }).notNull(),
-  category: text("category").default("General"),
+  type: text("type").$type<'product' | 'service'>().notNull(),
   price: real("price").notNull(),
-  imageUrl: text("image_url"),
-  createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
+  stock: real("stock").default(0),
+  unit: text("unit").default('unit'),
+  description: text("description"),
+  imageUrl: text("imageUrl"), // Added image support
+  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`CURRENT_TIMESTAMP`),
 });
 
 export const transactions = sqliteTable("transactions", {

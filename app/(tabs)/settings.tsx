@@ -65,73 +65,96 @@ export default function SettingsScreen() {
   );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: AppleDesign.colors.background }}>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: Spacing.md }}>
-          <View style={[styles.headerIcon, { backgroundColor: theme.primary + '15' }]}>
-            <Icon icon={Building2} size={28} color={theme.primary} />
-          </View>
-          <View>
-            <Text style={[styles.headerTitle, { color: theme.textHigh }]}>Identity</Text>
-            <Text style={[styles.subtitle, { color: theme.textLow }]}>Applied to all invoices & reports</Text>
-          </View>
+        <View style={styles.header}>
+           <Text style={styles.dateText}>MANAGEMENT</Text>
+           <Text style={styles.title}>Identity</Text>
         </View>
 
-        <View style={{ marginTop: Spacing.xl }}>
+        <AppleCard style={styles.heroCard}>
+           <View style={styles.heroRow}>
+              <View style={[styles.iconCircle, { backgroundColor: '#E3F2FD' }]}>
+                 <Building2 size={24} color={AppleDesign.colors.primary} />
+              </View>
+              <View style={{ flex: 1, marginLeft: 12 }}>
+                 <Text style={styles.businessName}>{name || 'Business Name'}</Text>
+                 <Text style={styles.businessSub}>{taxId || 'No Tax ID'}</Text>
+              </View>
+           </View>
+        </AppleCard>
+
+        <Text style={styles.sectionTitle}>Business Details</Text>
+        <AppleCard style={styles.formCard}>
           <Field label="Business Name" value={name} onChange={setName} placeholder="Acme Corp" icon={Building2} />
           <Field label="Tax ID / GST / EIN" value={taxId} onChange={setTaxId} placeholder="27AAPFU0939F1ZV" icon={Fingerprint} />
           <Field label="Address" value={address} onChange={setAddress} placeholder="123 Main St, Mumbai" icon={MapPin} />
+        </AppleCard>
+
+        <Text style={styles.sectionTitle}>Contact & Signature</Text>
+        <AppleCard style={styles.formCard}>
           <Field label="Email" value={email} onChange={setEmail} placeholder="hello@business.com" keyboard="email-address" icon={Mail} />
           <Field label="Phone" value={phone} onChange={setPhone} placeholder="+91 98765 43210" keyboard="phone-pad" icon={Phone} />
-          <Field label="Logo URL" value={logoUrl} onChange={setLogoUrl} placeholder="https://..." icon={ImageIcon} />
-          <Field label="Digital Signature Name" value={signatureName} onChange={setSignatureName} placeholder="Authorized Signatory" icon={FileSignature} />
-          <Field label="Invoice Tax Rate (%)" value={taxRate} onChange={setTaxRate} placeholder="18" keyboard="decimal-pad" icon={Percent} />
-          <Field label="Monthly Revenue Goal" value={monthlyRevenueGoal} onChange={setMonthlyRevenueGoal} placeholder="50000" keyboard="decimal-pad" icon={Target} />
+          <Field label="Digital Signature" value={signatureName} onChange={setSignatureName} placeholder="Authorized Signatory" icon={FileSignature} />
+        </AppleCard>
 
-          {/* Currency Selector */}
+        <Text style={styles.sectionTitle}>Billing Config</Text>
+        <AppleCard style={styles.formCard}>
+          <Field label="Default Tax Rate (%)" value={taxRate} onChange={setTaxRate} placeholder="18" keyboard="decimal-pad" icon={Percent} />
+          <Field label="Revenue Goal" value={monthlyRevenueGoal} onChange={setMonthlyRevenueGoal} placeholder="50000" keyboard="decimal-pad" icon={Target} />
+          
           <View style={styles.formGroup}>
-            <Text style={[styles.label, { color: theme.textLow, marginBottom: Spacing.sm }]}>Currency Symbol</Text>
+            <Text style={styles.label}>Currency Symbol</Text>
             <View style={styles.currencyRow}>
               {CURRENCIES.map(c => (
                 <TouchableOpacity
                   key={c}
-                  style={[styles.currencyBtn, currency === c && { backgroundColor: theme.primary }]}
+                  style={[styles.currencyBtn, currency === c && { backgroundColor: AppleDesign.colors.primary }]}
                   onPress={() => setCurrency(c)}
                 >
-                  <Text style={[styles.currencyText, { color: currency === c ? '#FFF' : theme.textHigh }]}>{c}</Text>
+                  <Text style={[styles.currencyText, { color: currency === c ? '#FFF' : AppleDesign.colors.text.high }]}>{c}</Text>
                 </TouchableOpacity>
               ))}
             </View>
           </View>
+        </AppleCard>
 
-          <TouchableOpacity
-            style={[styles.saveBtn, { backgroundColor: saved ? '#34C759' : theme.primary }]}
-            onPress={handleSave}
-            activeOpacity={0.85}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Icon icon={saved ? CheckCircle2 : Save} size={20} color="#FFF" />
-              <Text style={styles.saveBtnText}>{saved ? 'Saved!' : 'Save Identity'}</Text>
-            </View>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          style={[styles.saveBtn, { backgroundColor: saved ? '#34C759' : AppleDesign.colors.primary }]}
+          onPress={handleSave}
+          activeOpacity={0.85}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Icon icon={saved ? CheckCircle2 : Save} size={20} color="#FFF" />
+            <Text style={styles.saveBtnText}>{saved ? 'Saved!' : 'Save Changes'}</Text>
+          </View>
+        </TouchableOpacity>
+        
+        <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: Spacing.lg },
-  headerIcon: { width: 56, height: 56, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontSize: 32, fontWeight: '700', letterSpacing: -0.5 },
-  subtitle: { fontSize: 13, fontWeight: '500' },
-  formGroup: { marginBottom: Spacing.lg },
-  label: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
-  input: { borderRadius: 12, paddingHorizontal: Spacing.md, paddingVertical: 14, fontSize: 16, fontWeight: '500' },
-  currencyRow: { flexDirection: 'row', gap: Spacing.sm, flexWrap: 'wrap' },
+  container: { flex: 1, paddingHorizontal: 24 },
+  header: { marginTop: 40, marginBottom: 24 },
+  dateText: { fontSize: 12, fontWeight: '700', color: AppleDesign.colors.text.low, letterSpacing: 1, marginBottom: 4 },
+  title: { ...AppleDesign.typography.h1, color: AppleDesign.colors.text.high },
+  heroCard: { padding: 16, marginBottom: 24 },
+  heroRow: { flexDirection: 'row', alignItems: 'center' },
+  iconCircle: { width: 50, height: 50, borderRadius: 25, justifyContent: 'center', alignItems: 'center' },
+  businessName: { fontSize: 20, fontWeight: '800', color: AppleDesign.colors.text.high },
+  businessSub: { fontSize: 14, color: AppleDesign.colors.text.low, marginTop: 2 },
+  sectionTitle: { fontSize: 13, fontWeight: '800', color: AppleDesign.colors.text.low, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12, marginLeft: 4 },
+  formCard: { padding: 16, marginBottom: 24 },
+  formGroup: { marginBottom: 16 },
+  label: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 },
+  input: { borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14, fontSize: 16, fontWeight: '500' },
+  currencyRow: { flexDirection: 'row', gap: 10, flexWrap: 'wrap' },
   currencyBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#F2F2F7', alignItems: 'center', justifyContent: 'center' },
   currencyText: { fontSize: 16, fontWeight: '700' },
-  saveBtn: { padding: Spacing.lg, borderRadius: 14, alignItems: 'center', marginTop: Spacing.sm, marginBottom: Spacing.xxl },
-  saveBtnText: { color: '#FFF', fontSize: 16, fontWeight: '700' },
+  saveBtn: { padding: 18, borderRadius: 16, alignItems: 'center', marginBottom: 60, ...AppleDesign.shadows.floating },
+  saveBtnText: { color: '#FFF', fontSize: 17, fontWeight: '700' },
 });
 
