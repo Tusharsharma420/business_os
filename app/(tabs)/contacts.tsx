@@ -4,32 +4,28 @@ import {
   SafeAreaView, TouchableOpacity, ScrollView, Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Colors, Spacing } from '@/constants/DesignSystem';
+import { AppleDesign } from '@/constants/AppleDesign';
 import { useOSStore, Contact } from '@/store/useOSStore';
 import { BottomSheet } from '@/components/BottomSheet';
 import { FormInput } from '@/components/FormInput';
 import { PrimaryButton } from '@/components/PrimaryButton';
+import { AppleCard } from '@/components/AppleCard';
 import { Icon } from '@/components/ui/icon';
 import { 
   Plus, 
-  User, 
-  Trash2, 
+  Search,
   ChevronRight, 
-  Users, 
-  CheckCircle2 
+  Users,
+  MessageCircle,
+  Phone,
+  MoreVertical,
+  UserPlus
 } from 'lucide-react-native';
 
 type ContactType = Contact['type'];
 const CONTACT_TYPES: ContactType[] = ['Customer', 'Vendor', 'Partner', 'Other'];
-const typeColor: Record<ContactType, string> = {
-  Customer: '#00C805',
-  Vendor: '#007AFF',
-  Partner: '#FF9500',
-  Other: '#8E8E93',
-};
 
 export default function ContactsScreen() {
-  const theme = Colors.light;
   const router = useRouter();
   const { contacts, transactions, addContact, deleteContact, identity } = useOSStore();
   const cur = identity.currency;
@@ -37,102 +33,116 @@ export default function ContactsScreen() {
   const [sheetVisible, setSheetVisible] = useState(false);
   const [name, setName] = useState('');
   const [selectedType, setSelectedType] = useState<ContactType>('Customer');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredContacts = contacts.filter(c => 
+    c.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleAdd = () => {
     if (!name.trim()) return;
     addContact({ name: name.trim(), type: selectedType });
+    resetForm();
+  };
+
+  const resetForm = () => {
     setName(''); setSelectedType('Customer'); setSheetVisible(false);
   };
 
   const handleDelete = (id: string, cName: string) => {
-    Alert.alert(`Delete "${cName}"?`, 'This will not delete their transactions.', [
+    Alert.alert(`Remove "${cName}"?`, 'This will delete the contact from your list.', [
       { text: 'Cancel', style: 'cancel' },
-      { 
-        text: 'Delete', 
-        style: 'destructive', 
-        onPress: () => {
-          try {
-            deleteContact(id);
-          } catch (e: any) {
-            Alert.alert('Cannot Delete', e.message);
-          }
-        } 
-      },
+      { text: 'Remove', style: 'destructive', onPress: () => deleteContact(id) },
     ]);
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
-      <View style={styles.container}>
-        <View style={styles.headerRow}>
-          <Text style={[styles.title, { color: theme.textHigh }]}>Contacts</Text>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.content}>
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.title}>People</Text>
+            <Text style={styles.subtitle}>{contacts.length} connections</Text>
+          </View>
           <TouchableOpacity 
-            style={[styles.fab, { backgroundColor: theme.primary }]} 
-            onPress={() => setSheetVisible(true)} 
-            activeOpacity={0.8}
+            style={styles.addBtn} 
+            onPress={() => setSheetVisible(true)}
           >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Icon icon={Plus} size={16} color="#FFF" />
-              <Text style={styles.fabText}>Add</Text>
-            </View>
+            <UserPlus color="#fff" size={24} />
           </TouchableOpacity>
         </View>
 
+        <View style={styles.searchBar}>
+          <Search size={20} color={AppleDesign.colors.text.low} />
+          <FormInput 
+            placeholder="Search contacts..." 
+            value={searchQuery} 
+            onChangeText={setSearchQuery}
+            containerStyle={styles.searchInput}
+            hideLabel
+          />
+        </View>
+
         <FlatList
-          data={contacts}
+          data={filteredContacts}
           keyExtractor={item => item.id}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.listContainer}
+          contentContainerStyle={styles.list}
           renderItem={({ item }) => {
             const txCount = transactions.filter(t => t.contactId === item.id).length;
-            const totalValue = transactions.filter(t => t.contactId === item.id && t.type === 'Money In').reduce((s, t) => s + t.amount, 0);
+            const balance = transactions
+              .filter(t => t.contactId === item.id)
+              .reduce((s, t) => s + (t.type === 'Money In' ? t.amount : -t.amount), 0);
+
             return (
               <TouchableOpacity
-                style={styles.card}
                 onPress={() => router.push({ pathname: '/contact/[contactId]', params: { contactId: item.id } })}
                 onLongPress={() => handleDelete(item.id, item.name)}
-                activeOpacity={0.7}
               >
-                <View style={[styles.avatar, { backgroundColor: typeColor[item.type] + '15' }]}>
-                  <Text style={[styles.avatarText, { color: typeColor[item.type] }]}>{item.name.charAt(0).toUpperCase()}</Text>
-                </View>
-                <View style={{ flex: 1, marginLeft: Spacing.md }}>
-                  <Text style={[styles.cardName, { color: theme.textHigh }]}>{item.name}</Text>
-                  <Text style={[styles.cardSub, { color: theme.textLow }]}>
-                    {txCount} transaction{txCount !== 1 ? 's' : ''}
-                    {totalValue > 0 ? ` · ${cur}${totalValue.toLocaleString()}` : ''}
-                  </Text>
-                </View>
-                <View style={{ alignItems: 'flex-end', gap: 6 }}>
-                  <View style={[styles.badge, { backgroundColor: typeColor[item.type] + '10' }]}>
-                    <Text style={[styles.badgeText, { color: typeColor[item.type] }]}>{item.type}</Text>
+                <AppleCard style={styles.contactCard}>
+                  <View style={styles.cardRow}>
+                    <View style={styles.avatar}>
+                      <Text style={styles.avatarText}>{item.name.charAt(0).toUpperCase()}</Text>
+                    </View>
+                    <View style={styles.info}>
+                      <Text style={styles.name}>{item.name}</Text>
+                      <Text style={styles.typeText}>{item.type} &bull; {txCount} txs</Text>
+                    </View>
+                    <View style={styles.balanceCol}>
+                      <Text style={[styles.balance, { color: balance >= 0 ? '#2E7D32' : '#C62828' }]}>
+                        {cur}{Math.abs(balance).toLocaleString()}
+                      </Text>
+                      <ChevronRight size={16} color={AppleDesign.colors.text.low} />
+                    </View>
                   </View>
-                  <Icon icon={ChevronRight} size={14} color={theme.textLow} />
-                </View>
+                </AppleCard>
               </TouchableOpacity>
             );
           }}
         />
       </View>
 
-      <BottomSheet visible={sheetVisible} onClose={() => setSheetVisible(false)} title="New Contact">
-        <ScrollView keyboardShouldPersistTaps="handled">
-          <FormInput label="Name" value={name} onChangeText={setName} placeholder="e.g. Acme Corporation" autoCapitalize="words" />
-          <View style={{ paddingHorizontal: Spacing.lg, marginBottom: Spacing.md }}>
-            <Text style={[styles.pickerLabel, { color: theme.textLow }]}>Type</Text>
+      <BottomSheet visible={sheetVisible} onClose={resetForm} title="New Contact">
+        <ScrollView style={styles.form} keyboardShouldPersistTaps="handled">
+          <FormInput label="Name" value={name} onChangeText={setName} placeholder="John Doe" />
+          
+          <View style={styles.typeSection}>
+            <Text style={styles.label}>Category</Text>
             <View style={styles.typeGrid}>
               {CONTACT_TYPES.map(type => (
                 <TouchableOpacity 
                   key={type} 
-                  style={[styles.typeBtn, selectedType === type && { backgroundColor: theme.primary }]} 
+                  style={[styles.typeChip, selectedType === type && styles.typeChipActive]} 
                   onPress={() => setSelectedType(type)}
                 >
-                  <Text style={[styles.typeBtnText, { color: selectedType === type ? '#FFF' : theme.textLow }]}>{type}</Text>
+                  <Text style={[styles.typeChipText, selectedType === type && styles.typeChipTextActive]}>{type}</Text>
                 </TouchableOpacity>
               ))}
             </View>
           </View>
-          <PrimaryButton label="Save Contact" onPress={handleAdd} />
+
+          <PrimaryButton label="Create Contact" onPress={handleAdd} />
+          <View style={{ height: 40 }} />
         </ScrollView>
       </BottomSheet>
     </SafeAreaView>
@@ -140,21 +150,131 @@ export default function ContactsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingTop: Spacing.md },
-  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: Spacing.lg, marginBottom: Spacing.lg, marginTop: Spacing.md },
-  title: { fontSize: 32, fontWeight: '700', letterSpacing: -0.5 },
-  fab: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 },
-  fabText: { color: '#FFF', fontWeight: '700', fontSize: 14 },
-  listContainer: { paddingHorizontal: Spacing.lg, paddingBottom: Spacing.xxl },
-  card: { flexDirection: 'row', alignItems: 'center', paddingVertical: Spacing.md, borderBottomWidth: 1, borderBottomColor: '#F5F5F5' },
-  avatar: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontSize: 18, fontWeight: '800' },
-  cardName: { fontSize: 16, fontWeight: '600', marginBottom: 2 },
-  cardSub: { fontSize: 13, fontWeight: '500' },
-  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  badgeText: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
-  pickerLabel: { fontSize: 12, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: Spacing.sm },
-  typeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
-  typeBtn: { paddingHorizontal: Spacing.md, paddingVertical: 10, borderRadius: 12, backgroundColor: '#F2F2F7' },
-  typeBtnText: { fontSize: 14, fontWeight: '600' },
+  container: {
+    flex: 1,
+    backgroundColor: AppleDesign.colors.background,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: AppleDesign.spacing.lg,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 40,
+    marginBottom: 24,
+  },
+  title: {
+    ...AppleDesign.typography.h1,
+    color: AppleDesign.colors.text.high,
+  },
+  subtitle: {
+    ...AppleDesign.typography.caption,
+  },
+  addBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: AppleDesign.colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...AppleDesign.shadows.floating,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F2F2F7',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    marginBottom: 24,
+  },
+  searchInput: {
+    flex: 1,
+    borderBottomWidth: 0,
+    marginBottom: 0,
+    paddingVertical: 10,
+  },
+  list: {
+    paddingBottom: 100,
+  },
+  contactCard: {
+    marginBottom: 16,
+    padding: 12,
+  },
+  cardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#F2F2F7',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarText: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: AppleDesign.colors.primary,
+  },
+  info: {
+    flex: 1,
+    marginLeft: 16,
+  },
+  name: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: AppleDesign.colors.text.high,
+  },
+  typeText: {
+    fontSize: 13,
+    color: AppleDesign.colors.text.low,
+    marginTop: 2,
+  },
+  balanceCol: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  balance: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  form: {
+    padding: 24,
+  },
+  typeSection: {
+    marginVertical: 24,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: AppleDesign.colors.text.low,
+    textTransform: 'uppercase',
+    marginBottom: 12,
+  },
+  typeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  typeChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: '#F2F2F7',
+  },
+  typeChipActive: {
+    backgroundColor: AppleDesign.colors.primary,
+  },
+  typeChipText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: AppleDesign.colors.text.high,
+  },
+  typeChipTextActive: {
+    color: '#fff',
+  }
 });
