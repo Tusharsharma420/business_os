@@ -14,7 +14,9 @@ export const items = sqliteTable("items", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   type: text("type", { enum: ["product", "service"] }).notNull(),
+  category: text("category").default("General"),
   price: real("price").notNull(),
+  imageUrl: text("image_url"),
   createdAt: text("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 

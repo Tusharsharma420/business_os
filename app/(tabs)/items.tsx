@@ -1,173 +1,214 @@
 import React, { useState } from 'react';
 import {
   StyleSheet, View, Text, FlatList,
-  SafeAreaView, TouchableOpacity, ScrollView, Alert,
+  SafeAreaView, TouchableOpacity, ScrollView, Alert, Image,
 } from 'react-native';
-import { Colors, Spacing } from '@/constants/DesignSystem';
+import { AppleDesign } from '@/constants/AppleDesign';
 import { useOSStore } from '@/store/useOSStore';
 import { useRouter } from 'expo-router';
 import { BottomSheet } from '@/components/BottomSheet';
 import { FormInput } from '@/components/FormInput';
 import { PrimaryButton } from '@/components/PrimaryButton';
+import { AppleCard } from '@/components/AppleCard';
 import { Icon } from '@/components/ui/icon';
+import * as ImagePicker from 'expo-image-picker';
 import { 
-  Wrench, 
-  Monitor, 
-  Cpu, 
-  RefreshCw, 
   Package, 
   Trash2, 
   Plus,
   LayoutGrid,
-  LucideIcon
+  Image as ImageIcon,
+  Camera,
+  ChevronRight,
+  Archive,
+  ShoppingBag
 } from 'lucide-react-native';
 
-const CATEGORIES = ['Service', 'Hardware', 'Software', 'Subscription', 'Other'];
-const catIcon: Record<string, LucideIcon> = {
-  Service: Wrench, 
-  Hardware: Monitor, 
-  Software: Cpu, 
-  Subscription: RefreshCw, 
-  Other: Package,
-};
+const CATEGORIES = ['Hardware', 'Software', 'Service', 'Other'];
 
 export default function ItemsScreen() {
-  const theme = Colors.light;
   const router = useRouter();
-  const { items, addItem, deleteItem, identity } = useOSStore();
+  const { items, addItem, updateItem, deleteItem, identity } = useOSStore();
   const cur = identity.currency;
 
   const [sheetVisible, setSheetVisible] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
-  const [category, setCategory] = useState('Service');
+  const [category, setCategory] = useState('Hardware');
+  const [type, setType] = useState<'product' | 'service'>('product');
   const [stock, setStock] = useState('0');
-  const [minStock, setMinStock] = useState('0');
+  const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
 
-  const handleAdd = () => {
-    const parsedPrice = parseFloat(price);
-    const parsedStock = parseInt(stock);
-    const parsedMin = parseInt(minStock);
-    if (!name.trim() || isNaN(parsedPrice)) return;
-    
-    addItem({ 
-      name: name.trim(), 
-      price: parsedPrice, 
-      category, 
-      stock: isNaN(parsedStock) ? 0 : parsedStock,
-      minStock: isNaN(parsedMin) ? 0 : parsedMin 
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
     });
 
-    setName(''); setPrice(''); setCategory('Service'); setStock('0'); setMinStock('0'); setSheetVisible(false);
+    if (!result.canceled) {
+      setImageUrl(result.assets[0].uri);
+    }
   };
 
-  const handleDelete = (id: string, iName: string) => {
-    Alert.alert(`Delete "${iName}"?`, 'This cannot be undone.', [
+  const handleSave = () => {
+    const parsedPrice = parseFloat(price);
+    if (!name.trim() || isNaN(parsedPrice)) return;
+    
+    const itemData = { 
+      name: name.trim(), 
+      type,
+      price: parsedPrice, 
+      category, 
+      stock: parseInt(stock) || 0,
+      minStock: 0,
+      imageUrl
+    };
+
+    if (editingId) {
+      updateItem(editingId, itemData);
+    } else {
+      addItem(itemData);
+    }
+
+    resetForm();
+  };
+
+  const resetForm = () => {
+    setName(''); setPrice(''); setCategory('Hardware'); setStock('0'); setImageUrl(undefined); 
+    setEditingId(null); setSheetVisible(false); setType('product');
+  };
+
+  const handleEdit = (item: any) => {
+    setEditingId(item.id);
+    setName(item.name);
+    setPrice(item.price.toString());
+    setCategory(item.category);
+    setStock(item.stock.toString());
+    setImageUrl(item.imageUrl);
+    setType(item.type);
+    setSheetVisible(true);
+  };
+
+  const handleDelete = (id: string) => {
+    Alert.alert('Delete Item', 'Are you sure you want to remove this item?', [
       { text: 'Cancel', style: 'cancel' },
-      { 
-        text: 'Delete', 
-        style: 'destructive', 
-        onPress: () => {
-          try {
-            deleteItem(id);
-          } catch (e: any) {
-            Alert.alert('Cannot Delete', e.message);
-          }
-        } 
-      },
+      { text: 'Delete', style: 'destructive', onPress: () => deleteItem(id) }
     ]);
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
-      <View style={styles.container}>
-        <View style={styles.headerRow}>
-          <Text style={[styles.title, { color: theme.textHigh }]}>Items</Text>
-          <TouchableOpacity style={[styles.fab, { backgroundColor: theme.primary }]} onPress={() => setSheetVisible(true)} activeOpacity={0.85}>
-            <Text style={styles.fabText}>+ Add</Text>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.content}>
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.title}>Catalog</Text>
+            <Text style={styles.subtitle}>{items.length} items registered</Text>
+          </View>
+          <TouchableOpacity 
+            style={styles.addBtn} 
+            onPress={() => { resetForm(); setSheetVisible(true); }}
+          >
+            <Plus color="#fff" size={24} />
           </TouchableOpacity>
         </View>
 
         <FlatList
           data={items}
           keyExtractor={item => item.id}
+          contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.listContainer}
           renderItem={({ item }) => (
-            <View style={styles.row}>
-              <View style={styles.iconBox}>
-                <Icon icon={catIcon[item.category] || Package} size={20} color={theme.textLow} />
-              </View>
-              <View style={{ flex: 1, marginLeft: Spacing.md }}>
-                <Text style={[styles.itemName, { color: theme.textHigh }]}>{item.name}</Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Text style={[styles.itemCat, { color: theme.textLow }]}>{item.category} · </Text>
-                  <Text style={[
-                    styles.stockLabel, 
-                    { color: item.stock <= item.minStock ? theme.negative : theme.textLow }
-                  ]}>
-                    Stock: {item.stock}
-                  </Text>
+            <TouchableOpacity onPress={() => handleEdit(item)}>
+              <AppleCard style={styles.itemCard}>
+                <View style={styles.itemRow}>
+                  {item.imageUrl ? (
+                    <Image source={{ uri: item.imageUrl }} style={styles.itemImage} />
+                  ) : (
+                    <View style={styles.imagePlaceholder}>
+                      <Icon icon={item.type === 'product' ? ShoppingBag : LayoutGrid} size={24} color={AppleDesign.colors.text.low} />
+                    </View>
+                  )}
+                  <View style={styles.itemInfo}>
+                    <Text style={styles.itemName}>{item.name}</Text>
+                    <Text style={styles.itemSub}>{item.category} &bull; {item.type}</Text>
+                  </View>
+                  <View style={styles.priceContainer}>
+                    <Text style={styles.itemPrice}>{cur}{item.price.toLocaleString()}</Text>
+                    <ChevronRight size={16} color={AppleDesign.colors.text.low} />
+                  </View>
                 </View>
-              </View>
-              <View style={{ alignItems: 'flex-end' }}>
-                <Text style={[styles.itemPrice, { color: theme.textHigh }]}>{cur}{item.price.toLocaleString()}</Text>
-                <TouchableOpacity 
-                  style={[styles.itemRecordBtn, { backgroundColor: '#333' }]}
-                  onPress={() => router.push({ pathname: '/(tabs)/transactions', params: { add: 'true' } })}
-                >
-                  <Text style={styles.itemRecordText}>Record Sale</Text>
-                </TouchableOpacity>
-              </View>
-              <TouchableOpacity onPress={() => handleDelete(item.id, item.name)} style={styles.deleteBtn}>
-                <Icon icon={Trash2} size={18} color="#FF3B30" />
-              </TouchableOpacity>
-            </View>
+              </AppleCard>
+            </TouchableOpacity>
           )}
         />
       </View>
 
-      <BottomSheet visible={sheetVisible} onClose={() => setSheetVisible(false)} title="New Item">
-        <ScrollView keyboardShouldPersistTaps="handled">
-          <FormInput label="Name" value={name} onChangeText={setName} placeholder="e.g. Monthly Retainer" />
+      <BottomSheet 
+        visible={sheetVisible} 
+        onClose={resetForm} 
+        title={editingId ? "Edit Item" : "New Item"}
+      >
+        <ScrollView style={styles.form} keyboardShouldPersistTaps="handled">
+          <TouchableOpacity style={styles.imagePickerBtn} onPress={pickImage}>
+            {imageUrl ? (
+              <Image source={{ uri: imageUrl }} style={styles.pickedImage} />
+            ) : (
+              <View style={styles.imagePickerPlaceholder}>
+                <Camera color={AppleDesign.colors.primary} size={32} />
+                <Text style={styles.imagePickerText}>Add Photo</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
+          <View style={styles.typeSelector}>
+            <TouchableOpacity 
+              style={[styles.typeBtn, type === 'product' && styles.typeBtnActive]}
+              onPress={() => setType('product')}
+            >
+              <Text style={[styles.typeText, type === 'product' && styles.typeTextActive]}>Product</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.typeBtn, type === 'service' && styles.typeBtnActive]}
+              onPress={() => setType('service')}
+            >
+              <Text style={[styles.typeText, type === 'service' && styles.typeTextActive]}>Service</Text>
+            </TouchableOpacity>
+          </View>
+
+          <FormInput label="Name" value={name} onChangeText={setName} placeholder="Item name" />
           <FormInput label="Price" value={price} onChangeText={setPrice} keyboardType="decimal-pad" placeholder="0.00" />
           
-          <View style={{ flexDirection: 'row', gap: Spacing.md }}>
-            <FormInput 
-              label="Initially in Stock" 
-              value={stock} 
-              onChangeText={setStock} 
-              keyboardType="number-pad" 
-              placeholder="0" 
-              containerStyle={{ flex: 1 }}
-            />
-            <FormInput 
-              label="Min Stock Alert" 
-              value={minStock} 
-              onChangeText={setMinStock} 
-              keyboardType="number-pad" 
-              placeholder="0" 
-              containerStyle={{ flex: 1 }}
-            />
-          </View>
-          
-          <View style={{ paddingHorizontal: Spacing.lg, marginBottom: Spacing.md }}>
-            <Text style={[styles.pickerLabel, { color: theme.textLow }]}>Category</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 4 }}>
-              {CATEGORIES.map(cat => {
-                const CatIconComp = catIcon[cat] || LayoutGrid;
-                return (
-                  <TouchableOpacity key={cat} style={[styles.chip, category === cat && { backgroundColor: '#333' }]} onPress={() => setCategory(cat)}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Icon icon={CatIconComp} size={14} color={category === cat ? '#FFF' : theme.textHigh} />
-                      <Text style={[styles.chipText, { color: category === cat ? '#FFF' : theme.textHigh }]}>{cat}</Text>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
+          {type === 'product' && (
+            <FormInput label="Initial Stock" value={stock} onChangeText={setStock} keyboardType="number-pad" placeholder="0" />
+          )}
+
+          <View style={styles.categorySection}>
+            <Text style={styles.label}>Category</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {CATEGORIES.map(cat => (
+                <TouchableOpacity 
+                  key={cat} 
+                  style={[styles.chip, category === cat && styles.chipActive]} 
+                  onPress={() => setCategory(cat)}
+                >
+                  <Text style={[styles.chipText, category === cat && styles.chipTextActive]}>{cat}</Text>
+                </TouchableOpacity>
+              ))}
             </ScrollView>
           </View>
-          <PrimaryButton label="Save Item" onPress={handleAdd} />
+
+          <View style={{ marginTop: 24, gap: 12 }}>
+            <PrimaryButton label="Save Changes" onPress={handleSave} />
+            {editingId && (
+              <TouchableOpacity style={styles.deleteLink} onPress={() => handleDelete(editingId)}>
+                <Text style={styles.deleteLinkText}>Delete Item</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+          <View style={{ height: 40 }} />
         </ScrollView>
       </BottomSheet>
     </SafeAreaView>
@@ -175,23 +216,175 @@ export default function ItemsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingTop: Spacing.md },
-  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: Spacing.lg, marginBottom: Spacing.lg, marginTop: Spacing.md },
-  title: { fontSize: 32, fontWeight: '700', letterSpacing: -0.5 },
-  fab: { paddingHorizontal: Spacing.md, paddingVertical: 10, borderRadius: 20 },
-  fabText: { color: '#FFF', fontWeight: '700', fontSize: 14 },
-  listContainer: { paddingHorizontal: Spacing.lg, paddingBottom: Spacing.xxl },
-  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: Spacing.md, borderBottomWidth: 1, borderBottomColor: '#F5F5F5' },
-  iconBox: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#F2F2F7', alignItems: 'center', justifyContent: 'center' },
-  itemName: { fontSize: 16, fontWeight: '600', marginBottom: 2 },
-  itemCat: { fontSize: 13, fontWeight: '500' },
-  stockLabel: { fontSize: 13, fontWeight: '700' },
-  itemPrice: { fontSize: 16, fontWeight: '800' },
-  itemRecordBtn: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10, marginTop: 4 },
-  itemRecordText: { color: '#FFF', fontSize: 11, fontWeight: '700' },
-  deleteBtn: { marginLeft: 16, padding: 8 },
-  pickerLabel: { fontSize: 12, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: Spacing.sm },
-  chip: { paddingHorizontal: Spacing.md, paddingVertical: 8, borderRadius: 20, backgroundColor: '#F2F2F7', marginRight: Spacing.sm },
-  chipText: { fontSize: 14, fontWeight: '600' },
+  container: {
+    flex: 1,
+    backgroundColor: AppleDesign.colors.background,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: AppleDesign.spacing.lg,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 40,
+    marginBottom: 24,
+  },
+  title: {
+    ...AppleDesign.typography.h1,
+    color: AppleDesign.colors.text.high,
+  },
+  subtitle: {
+    ...AppleDesign.typography.caption,
+  },
+  addBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: AppleDesign.colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...AppleDesign.shadows.floating,
+  },
+  list: {
+    paddingBottom: 100,
+  },
+  itemCard: {
+    marginBottom: 16,
+    padding: 12,
+  },
+  itemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  itemImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 12,
+    backgroundColor: '#f1f5f9',
+  },
+  imagePlaceholder: {
+    width: 60,
+    height: 60,
+    borderRadius: 12,
+    backgroundColor: '#f1f5f9',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  itemInfo: {
+    flex: 1,
+    marginLeft: 16,
+  },
+  itemName: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: AppleDesign.colors.text.high,
+  },
+  itemSub: {
+    fontSize: 13,
+    color: AppleDesign.colors.text.low,
+    marginTop: 2,
+  },
+  priceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  itemPrice: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: AppleDesign.colors.primary,
+  },
+  form: {
+    padding: 24,
+  },
+  imagePickerBtn: {
+    width: 120,
+    height: 120,
+    borderRadius: 30,
+    backgroundColor: '#f1f5f9',
+    alignSelf: 'center',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderStyle: 'dashed',
+  },
+  imagePickerPlaceholder: {
+    alignItems: 'center',
+  },
+  imagePickerText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: AppleDesign.colors.primary,
+    marginTop: 8,
+  },
+  pickedImage: {
+    width: '100%',
+    height: '100%',
+  },
+  typeSelector: {
+    flexDirection: 'row',
+    backgroundColor: '#f1f5f9',
+    borderRadius: 12,
+    padding: 4,
+    marginBottom: 24,
+  },
+  typeBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+    borderRadius: 8,
+  },
+  typeBtnActive: {
+    backgroundColor: '#fff',
+    ...AppleDesign.shadows.subtle,
+  },
+  typeText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: AppleDesign.colors.text.low,
+  },
+  typeTextActive: {
+    color: AppleDesign.colors.text.high,
+  },
+  categorySection: {
+    marginTop: 16,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: AppleDesign.colors.text.low,
+    textTransform: 'uppercase',
+    marginBottom: 12,
+  },
+  chip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#f1f5f9',
+    marginRight: 8,
+  },
+  chipActive: {
+    backgroundColor: AppleDesign.colors.primary,
+  },
+  chipText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: AppleDesign.colors.text.high,
+  },
+  chipTextActive: {
+    color: '#fff',
+  },
+  deleteLink: {
+    alignSelf: 'center',
+    padding: 12,
+  },
+  deleteLinkText: {
+    color: AppleDesign.colors.danger,
+    fontWeight: '600',
+  }
 });
-
