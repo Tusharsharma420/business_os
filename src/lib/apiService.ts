@@ -1,7 +1,7 @@
 import { createLogger } from '@/lib/logger';
 
 const logger = createLogger('apiService');
-const API_URL = 'http://localhost:3000/api';
+const API_URL = 'http://10.59.0.114:3000/api';
 
 export const ApiService = {
   // Sync the entire state (Fallback)
