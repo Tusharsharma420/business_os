@@ -1,23 +1,25 @@
-# 🎯 Project Phase: Analytics & Stabilization (v2.1)
+# 🎯 Project Phase: Phase 1: Foundation & DevOps
 
 ## 🛠 Infrastructure & DevOps
-- [ ] **Task 2.1.1: Environment Variable Transition**
-  - [ ] Backend: Setup `dotenv` and move config to `.env`.
-  - [ ] Frontend: Setup `expo-constants` for API base URL.
-  - [ ] Git: Ensure `.env` is in `.gitignore`.
-- [ ] **Task 2.1.2: Branching Strategy**
-  - [ ] Initialize `feature/v2.1-analytics` branch for development.
+- [x] **Task 1.1: Monorepo Scaffolding**
+  - [x] Initialize NPM workspaces.
+  - [x] Create `apps/mobile`, `apps/server`, and `packages/shared` directories.
+- [x] **Task 1.2: Build System & Linting**
+  - [x] Setup root `package.json` with shared scripts.
+  - [x] Configure global `tsconfig.json`.
+  - [ ] Setup ESLint and Prettier for the entire monorepo.
+- [x] **Task 1.3: Local Environment (Docker)**
+  - [x] Create `docker-compose.yml` for Postgres and Redis.
+  - [x] Add `.env.example` with standard defaults.
+- [x] **Task 1.4: CI/CD (GitHub Actions)**
+  - [x] Create `.github/workflows/ci.yml` for automated testing and linting.
 
-## 📊 Analytics Dashboard (The "Brain")
-- [ ] **Task 2.1.3: Backend Analytics Endpoints**
-  - [ ] Implement `GET /api/analytics/summary` (Real-time P&L).
-  - [ ] Implement `GET /api/analytics/trends` (Monthly data).
-- [ ] **Task 2.1.4: Frontend UI implementation**
-  - [ ] Create core Analytics Dashboard screen.
-  - [ ] Implement Metric Cards (Apple-clean aesthetics).
-  - [ ] Integration: Connect Dashboard to Backend Analytics.
+## 🔑 Security & Architecture
+- [ ] **Task 1.5: Security Blueprint**
+  - [ ] Document Auth flow (JWT + Refresh Tokens).
+  - [ ] Document RBAC schema.
 
-## 📄 Document Engine
-- [ ] **Task 2.1.5: PDF Generation Base**
-  - [ ] Research and Setup `expo-print` and `expo-sharing` in frontend.
-  - [ ] Create basic Invoice Template (HTML/CSS).
+## 📊 Status Tracking
+- **Current Sprint**: Foundation -> Identity & Database Schema
+- **Health**: 🟢 Healthy
+- **Blockers**: `backend` directory lock (archived as best as possible)
