@@ -29,3 +29,15 @@
   - [x] Implement Auth State Management (Zustand).
   - [x] Create Login/Signup UI with "Apple-clean" design.
   - [x] Implement protected routing and redirection logic.
+- [x] **Task 2.3: Ledger Engine Implementation**
+  - [x] Implement Double-entry transaction logic.
+  - [x] Create routes for logging transactions and calculating balances.
+  - [x] Verify atomic integrity with real-world test cases.
+
+## 📦 Phase 3: Business Modules
+- [ ] **Task 3.1: Catalog & Inventory**
+  - [ ] Implement Product/Service management API.
+  - [ ] Connect Catalog items to Ledger transactions.
+- [ ] **Task 3.2: Contact Management**
+  - [ ] Implement Client/Supplier directory.
+  - [ ] Link contacts to financial records.

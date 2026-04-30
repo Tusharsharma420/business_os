@@ -1,45 +1,51 @@
 import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
+import { v4 as uuidv4 } from 'uuid';
 
-// Entities (People/Firms)
+// Identity & People
 export const entities = sqliteTable('entities', {
-  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  id: text('id').primaryKey().$defaultFn(() => uuidv4()),
   name: text('name').notNull(),
-  type: text('type', { enum: ['CLIENT', 'VENDOR', 'INTERNAL'] }).notNull(),
-  email: text('email').unique(),
-  password: text('password'), // Hashed password for users
-  role: text('role', { enum: ['OWNER', 'ADMIN', 'STAFF'] }).default('STAFF'),
-  phone: text('phone'),
-  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+  email: text('email').notNull().unique(),
+  password: text('password').notNull(),
+  type: text('type', { enum: ['CLIENT', 'SUPPLIER', 'INTERNAL'] }).default('CLIENT'),
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
 });
 
-// Catalog (Inventory/Services)
-export const catalogItems = sqliteTable('catalog_items', {
-  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+// Chart of Accounts
+export const accounts = sqliteTable('accounts', {
+  id: text('id').primaryKey().$defaultFn(() => uuidv4()),
+  name: text('name').notNull(),
+  type: text('type', { enum: ['ASSET', 'LIABILITY', 'EQUITY', 'REVENUE', 'EXPENSE'] }).notNull(),
+  description: text('description'),
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+});
+
+// Core Transactions (Master Record)
+export const transactions = sqliteTable('transactions', {
+  id: text('id').primaryKey().$defaultFn(() => uuidv4()),
+  date: text('date').notNull().$defaultFn(() => new Date().toISOString()),
+  description: text('description').notNull(),
+  amount: real('amount').notNull(),
+  metadata: text('metadata'), // JSON string
+  createdBy: text('created_by').references(() => entities.id),
+});
+
+// Ledger Entries (Double-Entry lines)
+export const ledgerEntries = sqliteTable('ledger_entries', {
+  id: text('id').primaryKey().$defaultFn(() => uuidv4()),
+  transactionId: text('transaction_id').notNull().references(() => transactions.id),
+  accountId: text('account_id').notNull().references(() => accounts.id),
+  debit: real('debit').default(0),
+  credit: real('credit').default(0),
+  date: text('date').notNull().$defaultFn(() => new Date().toISOString()),
+});
+
+// Product/Service Catalog
+export const catalog = sqliteTable('catalog', {
+  id: text('id').primaryKey().$defaultFn(() => uuidv4()),
   name: text('name').notNull(),
   price: real('price').notNull(),
-  type: text('type', { enum: ['PRODUCT', 'SERVICE'] }).notNull(),
-  stockCount: real('stock_count').default(0),
-  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
-});
-
-// Transactions (The Ledger)
-export const transactions = sqliteTable('transactions', {
-  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
-  entityId: text('entity_id').references(() => entities.id).notNull(),
-  amount: real('amount').notNull(),
-  currency: text('currency').default('USD').notNull(),
+  sku: text('sku'),
   description: text('description'),
-  status: text('status', { enum: ['PENDING', 'COMPLETED', 'CANCELLED'] }).default('PENDING').notNull(),
-  date: integer('date', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
-  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
-});
-
-// Transaction Items
-export const transactionItems = sqliteTable('transaction_items', {
-  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
-  transactionId: text('transaction_id').references(() => transactions.id).notNull(),
-  catalogItemId: text('catalog_item_id').references(() => catalogItems.id).notNull(),
-  quantity: real('quantity').notNull(),
-  priceAtTime: real('price_at_time').notNull(),
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
 });
